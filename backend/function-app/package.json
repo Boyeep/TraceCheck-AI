@@ -1,0 +1,23 @@
+{
+  "name": "tracecheck-function-app",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/src/functions/*.js",
+  "engines": {
+    "node": ">=18 <23"
+  },
+  "scripts": {
+    "build": "tsc",
+    "clean": "rmdir /s /q dist 2>nul || exit 0",
+    "start": "npm run build && func start",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@azure/ai-form-recognizer": "^5.1.0",
+    "@azure/functions": "^4.8.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.8.1",
+    "typescript": "^6.0.3"
+  }
+}

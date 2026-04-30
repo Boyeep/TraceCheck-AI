@@ -1,0 +1,31 @@
+{
+  "name": "tracecheck-ai",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "frontend",
+    "backend",
+    "backend/function-app"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev -w tracecheck-frontend\" \"npm run dev -w tracecheck-backend\"",
+    "dev:frontend": "npm run dev -w tracecheck-frontend",
+    "dev:backend": "npm run dev -w tracecheck-backend",
+    "dev:functions": "npm run start -w tracecheck-function-app",
+    "build": "npm run build -w tracecheck-frontend && npm run build -w tracecheck-backend && npm run build -w tracecheck-function-app",
+    "build:frontend": "npm run build -w tracecheck-frontend",
+    "build:backend": "npm run build -w tracecheck-backend",
+    "build:functions": "npm run build -w tracecheck-function-app",
+    "check:backend": "npm run check -w tracecheck-backend",
+    "preview": "npm run preview -w tracecheck-frontend",
+    "start:backend": "npm run start -w tracecheck-backend",
+    "docker:build": "docker compose build",
+    "docker:up": "docker compose up --build",
+    "docker:up:detached": "docker compose up --build -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

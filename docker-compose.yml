@@ -1,0 +1,40 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: tracecheck-backend
+    environment:
+      PORT: "8787"
+      AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT: ${AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT:-}
+      AZURE_DOCUMENT_INTELLIGENCE_KEY: ${AZURE_DOCUMENT_INTELLIGENCE_KEY:-}
+      AZURE_DOCUMENT_INTELLIGENCE_MODEL_ID: ${AZURE_DOCUMENT_INTELLIGENCE_MODEL_ID:-prebuilt-read}
+    ports:
+      - "8787:8787"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:8787/api/integration/status').then((response)=>process.exit(response.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: tracecheck-frontend
+    environment:
+      TRACECHECK_PREVIEW_API_TARGET: http://backend:8787
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "4173:4173"
+    restart: unless-stopped
