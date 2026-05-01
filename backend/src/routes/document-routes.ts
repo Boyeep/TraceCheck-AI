@@ -1,6 +1,5 @@
 import type { Express } from "express";
-import type { DocumentKind } from "../../../shared/types";
-import { isDocumentKind } from "../services/document-metadata-service";
+import { isDocumentKind } from "../../../shared/documents";
 import { extractDocumentFromUpload } from "../services/document-extraction-service";
 import { buildIntegrationStatus } from "../services/integration-status-service";
 import { documentUpload } from "../services/upload-service";
@@ -33,7 +32,7 @@ export const registerDocumentRoutes = (app: Express) => {
         return;
       }
 
-      const result = await extractDocumentFromUpload(kind as DocumentKind, file);
+      const result = await extractDocumentFromUpload(kind, file);
       response.json(result);
     },
   );

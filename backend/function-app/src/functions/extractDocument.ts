@@ -1,17 +1,13 @@
 import { HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { app } from "../app";
+import { isDocumentKind } from "../../../../shared/documents";
+import { isTextLikeUpload } from "../../../../shared/server/document-upload";
 import {
   buildIntegrationStatus,
   extractDocumentFromBinary,
   extractDocumentFromText,
-  isTextLikeUpload,
 } from "../lib/integration";
-import type {
-  DocumentKind,
-  ExtractDocumentResponse,
-} from "../../../../shared/types";
-
-const documentKinds: DocumentKind[] = ["deliveryNote", "coa", "materialLabel"];
+import type { ExtractDocumentResponse } from "../../../../shared/types";
 
 const jsonResponse = (body: unknown, status = 200): HttpResponseInit => ({
   status,
@@ -20,9 +16,6 @@ const jsonResponse = (body: unknown, status = 200): HttpResponseInit => ({
     "Cache-Control": "no-store",
   },
 });
-
-const isDocumentKind = (value: string): value is DocumentKind =>
-  documentKinds.includes(value as DocumentKind);
 
 const badRequest = (message: string): HttpResponseInit =>
   jsonResponse(

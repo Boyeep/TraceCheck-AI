@@ -1,4 +1,10 @@
-import type { DocumentKind } from "../../../shared/types";
+import type { DocumentKind } from "./types";
+
+export const documentKinds: DocumentKind[] = [
+  "deliveryNote",
+  "coa",
+  "materialLabel",
+];
 
 export const documentLabels: Record<DocumentKind, string> = {
   deliveryNote: "Delivery Note",
@@ -7,4 +13,4 @@ export const documentLabels: Record<DocumentKind, string> = {
 };
 
 export const isDocumentKind = (value: string): value is DocumentKind =>
-  value in documentLabels;
+  documentKinds.includes(value as DocumentKind);
