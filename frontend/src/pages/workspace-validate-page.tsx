@@ -1,5 +1,6 @@
 import { AlertTriangle, ArrowRight, CheckCircle2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { PanelHeader } from "../components/page";
 import { workspacePaths } from "../routes";
 import { issueTone, useWorkspaceFlow } from "../workspace";
 
@@ -10,12 +11,10 @@ export const WorkspaceValidatePage = () => {
     <div className="workspace">
       <section className="main-column">
         <article className="surface-card">
-          <div className="section-heading">
-            <div>
-              <p className="panel-label">Cross-Document Validation</p>
-              <h2>Field-by-field consistency matrix</h2>
-            </div>
-          </div>
+          <PanelHeader
+            label="Cross-Document Validation"
+            title="Field-by-field consistency matrix"
+          />
 
           {analysis.fieldChecks.length ? (
             <div className="matrix-table">
@@ -52,12 +51,7 @@ export const WorkspaceValidatePage = () => {
 
       <aside className="side-column">
         <article className="surface-card">
-          <div className="section-heading">
-            <div>
-              <p className="panel-label">Risk Flags</p>
-              <h2>What needs attention</h2>
-            </div>
-          </div>
+          <PanelHeader label="Risk Flags" title="What needs attention" />
           <div className="issue-stack">
             {analysis.issues.length ? (
               analysis.issues.map((issue) => (
@@ -79,12 +73,7 @@ export const WorkspaceValidatePage = () => {
         </article>
 
         <article className="surface-card">
-          <div className="section-heading">
-            <div>
-              <p className="panel-label">Decision Handoff</p>
-              <h2>When to continue</h2>
-            </div>
-          </div>
+          <PanelHeader label="Decision Handoff" title="When to continue" />
           <ol className="workflow-list">
             <li>Review all mismatch, missing, and warning verdicts.</li>
             <li>Confirm which flags are acceptable and which block release.</li>

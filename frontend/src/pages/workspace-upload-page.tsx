@@ -1,5 +1,6 @@
 import { ArrowRight, Cloud, Upload } from "lucide-react";
 import { Link } from "react-router-dom";
+import { PanelHeader } from "../components/page";
 import {
   documentKinds,
   getDocumentByKind,
@@ -21,12 +22,7 @@ export const WorkspaceUploadPage = () => {
     <div className="workspace">
       <section className="main-column">
         <article className="surface-card intake-card">
-          <div className="section-heading">
-            <div>
-              <p className="panel-label">Document Intake</p>
-              <h2>Upload source documents</h2>
-            </div>
-          </div>
+          <PanelHeader label="Document Intake" title="Upload source documents" />
 
           <p className="section-copy">
             Uploads pass through the TraceCheck flow first. Text files are parsed
@@ -86,12 +82,7 @@ export const WorkspaceUploadPage = () => {
 
       <aside className="side-column">
         <article className="surface-card">
-          <div className="section-heading">
-            <div>
-              <p className="panel-label">Upload Readiness</p>
-              <h2>What this step prepares</h2>
-            </div>
-          </div>
+          <PanelHeader label="Upload Readiness" title="What this step prepares" />
           <ol className="workflow-list">
             <li>Collect the delivery note, COA, and material label.</li>
             <li>Capture extracted fields and processing metadata per file.</li>
@@ -107,12 +98,7 @@ export const WorkspaceUploadPage = () => {
         </article>
 
         <article className="surface-card">
-          <div className="section-heading">
-            <div>
-              <p className="panel-label">Integration Mode</p>
-              <h2>Current processing path</h2>
-            </div>
-          </div>
+          <PanelHeader label="Integration Mode" title="Current processing path" />
           <div
             className={`integration-badge ${integrationStatus.mode === "azure" ? "is-live" : "is-fallback"}`}
           >
@@ -125,12 +111,7 @@ export const WorkspaceUploadPage = () => {
         </article>
 
         <article className="surface-card">
-          <div className="section-heading">
-            <div>
-              <p className="panel-label">Loaded Files</p>
-              <h2>Current intake state</h2>
-            </div>
-          </div>
+          <PanelHeader label="Loaded Files" title="Current intake state" />
           <div className="workspace-mini-stack">
             {documentKinds.map((entry) => {
               const document = getDocumentByKind(documents, entry.kind);

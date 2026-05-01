@@ -1,4 +1,5 @@
 import { Cloud, Download } from "lucide-react";
+import { PanelHeader } from "../components/page";
 import {
   documentKinds,
   formatReviewedAt,
@@ -43,12 +44,7 @@ export const WorkspaceDecisionPage = () => {
         </article>
 
         <article className="surface-card">
-          <div className="section-heading">
-            <div>
-              <p className="panel-label">Export Output</p>
-              <h2>Generate the verification report</h2>
-            </div>
-          </div>
+          <PanelHeader label="Export Output" title="Generate the verification report" />
           <p className="section-copy">
             Export the current recommendation together with issue summaries,
             field-check results, and QA review status.
@@ -64,12 +60,7 @@ export const WorkspaceDecisionPage = () => {
 
       <aside className="side-column">
         <article className="surface-card">
-          <div className="section-heading">
-            <div>
-              <p className="panel-label">Review Status</p>
-              <h2>Per-document readiness</h2>
-            </div>
-          </div>
+          <PanelHeader label="Review Status" title="Per-document readiness" />
           <div className="workspace-mini-stack">
             {documentKinds.map((entry) => {
               const document = getDocumentByKind(documents, entry.kind);
@@ -90,12 +81,7 @@ export const WorkspaceDecisionPage = () => {
         </article>
 
         <article className="surface-card">
-          <div className="section-heading">
-            <div>
-              <p className="panel-label">Azure Integration</p>
-              <h2>Backend readiness</h2>
-            </div>
-          </div>
+          <PanelHeader label="Azure Integration" title="Backend readiness" />
           <div
             className={`integration-badge ${integrationStatus.mode === "azure" ? "is-live" : "is-fallback"}`}
           >
@@ -126,12 +112,7 @@ export const WorkspaceDecisionPage = () => {
         </article>
 
         <article className="surface-card">
-          <div className="section-heading">
-            <div>
-              <p className="panel-label">Final Check</p>
-              <h2>Before sharing the result</h2>
-            </div>
-          </div>
+          <PanelHeader label="Final Check" title="Before sharing the result" />
           <ol className="workflow-list">
             <li>Make sure the recommendation matches the visible issues.</li>
             <li>Confirm QA review has been completed where needed.</li>

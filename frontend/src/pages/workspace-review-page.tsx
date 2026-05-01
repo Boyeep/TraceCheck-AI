@@ -6,6 +6,7 @@ import {
   ScanSearch,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { PanelHeader } from "../components/page";
 import { ReviewDocumentCard } from "../components/workspace/review-document-card";
 import { workspacePaths } from "../routes";
 import {
@@ -28,12 +29,10 @@ export const WorkspaceReviewPage = () => {
     <div className="workspace">
       <section className="main-column">
         <article className="surface-card">
-          <div className="section-heading">
-            <div>
-              <p className="panel-label">Extraction Review</p>
-              <h2>Edit the captured fields before release</h2>
-            </div>
-          </div>
+          <PanelHeader
+            label="Extraction Review"
+            title="Edit the captured fields before release"
+          />
 
           <p className="section-copy">
             Human approval removes low-confidence OCR warnings, but it never hides
@@ -64,12 +63,10 @@ export const WorkspaceReviewPage = () => {
 
       <aside className="side-column">
         <article className="surface-card">
-          <div className="section-heading">
-            <div>
-              <p className="panel-label">Review Summary</p>
-              <h2>How far QA review has progressed</h2>
-            </div>
-          </div>
+          <PanelHeader
+            label="Review Summary"
+            title="How far QA review has progressed"
+          />
 
           <div className="review-summary">
             <div className="review-chip is-approved">
@@ -92,12 +89,7 @@ export const WorkspaceReviewPage = () => {
         </article>
 
         <article className="surface-card">
-          <div className="section-heading">
-            <div>
-              <p className="panel-label">Reviewer Guidance</p>
-              <h2>What to check before moving on</h2>
-            </div>
-          </div>
+          <PanelHeader label="Reviewer Guidance" title="What to check before moving on" />
           <ol className="workflow-list">
             <li>Confirm OCR values on every loaded document.</li>
             <li>Fix field misses or obvious recognition errors.</li>

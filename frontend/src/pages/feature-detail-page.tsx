@@ -2,6 +2,7 @@ import { Navigate, useParams } from "react-router-dom";
 import { FeatureArchitectureGrid } from "../components/features/feature-architecture-grid";
 import { FeaturePageNav } from "../components/features/feature-page-nav";
 import { FeatureSectionsGrid } from "../components/features/feature-sections-grid";
+import { PageSectionHeader } from "../components/page";
 import { getFeatureSpotlightBySlug } from "../features";
 import { routePaths } from "../routes";
 
@@ -19,27 +20,25 @@ export const FeatureDetailPage = () => {
     <main className="route-main">
       <div className="page-shell page-top-shell">
         <section className="route-section">
-          <div className="section-header">
-            <div>
-              <p className="eyebrow">Inside This Area</p>
-              <h2 className="section-title">How this part of TraceCheck behaves.</h2>
-            </div>
-            <div className="feature-icon feature-detail-icon">
-              <Icon size={18} />
-            </div>
-          </div>
+          <PageSectionHeader
+            aside={(
+              <div className="feature-icon feature-detail-icon">
+                <Icon size={18} />
+              </div>
+            )}
+            eyebrow="Inside This Area"
+            title="How this part of TraceCheck behaves."
+          />
 
           <FeatureSectionsGrid sections={feature.sections} />
         </section>
 
         {feature.architectureColumns ? (
           <section className="route-section">
-            <div className="section-header">
-              <div>
-                <p className="eyebrow">System Shape</p>
-                <h2 className="section-title">What supports this feature area.</h2>
-              </div>
-            </div>
+            <PageSectionHeader
+              eyebrow="System Shape"
+              title="What supports this feature area."
+            />
 
             <FeatureArchitectureGrid columns={feature.architectureColumns} />
           </section>

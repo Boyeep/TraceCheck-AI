@@ -6,6 +6,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { PageSectionHeader } from "../components/page";
 import { TypedText } from "../components/typed-text";
 import {
   routePaths,
@@ -137,12 +138,10 @@ export const HomePage = () => (
       </section>
 
       <section className="route-section">
-        <div className="section-header">
-          <div>
-            <p className="eyebrow">Operational Loop</p>
-            <h2 className="section-title">From intake desk to release decision.</h2>
-          </div>
-        </div>
+        <PageSectionHeader
+          eyebrow="Operational Loop"
+          title="From intake desk to release decision."
+        />
 
         <div className="ops-grid">
           {workflowCards.map((card) => {
