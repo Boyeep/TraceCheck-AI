@@ -2,12 +2,12 @@
   "name": "tracecheck-function-app",
   "version": "0.1.0",
   "private": true,
-  "main": "dist/src/functions/*.js",
+  "main": "dist/backend/function-app/src/functions/*.js",
   "engines": {
     "node": ">=18 <23"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "npm run clean && tsc",
     "clean": "rmdir /s /q dist 2>nul || exit 0",
     "start": "npm run build && func start",
     "prepublishOnly": "npm run build"

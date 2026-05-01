@@ -6,7 +6,10 @@ import {
   extractDocumentFromText,
   isTextLikeUpload,
 } from "../lib/integration";
-import type { DocumentKind, ExtractDocumentResponse } from "../lib/types";
+import type {
+  DocumentKind,
+  ExtractDocumentResponse,
+} from "../../../../shared/types";
 
 const documentKinds: DocumentKind[] = ["deliveryNote", "coa", "materialLabel"];
 

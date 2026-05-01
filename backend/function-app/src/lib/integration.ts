@@ -9,8 +9,8 @@ import type {
   ExtractDocumentResponse,
   SourceMode,
   TraceDocument,
-} from "./types";
-import { extractFields } from "./tracecheck";
+} from "../../../../shared/types";
+import { extractFields } from "../../../../shared/tracecheck";
 
 const modelId =
   process.env.AZURE_DOCUMENT_INTELLIGENCE_MODEL_ID ?? "prebuilt-read";
@@ -30,7 +30,10 @@ export const buildIntegrationStatus = (
 ): AzureIntegrationStatus => ({
   mode: endpoint && key ? "azure" : "fallback",
   documentIntelligenceConfigured: Boolean(endpoint && key),
+  openAiConfigured: false,
   modelId,
+  extractionStrategy: "rule-engine",
+  explanationStrategy: "rule-engine",
   reason:
     reason ??
     (endpoint && key

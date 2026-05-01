@@ -1,5 +1,4 @@
 import type {
-  ExtractedFields,
   FieldCheck,
   Recommendation,
   TraceAnalysis,
@@ -7,100 +6,14 @@ import type {
   TraceFieldKey,
   ValidationIssue,
   Verdict,
-} from "./types";
-
-const fieldLabels: Record<TraceFieldKey, string> = {
-  materialName: "Material Name",
-  itemCode: "Item Code",
-  supplier: "Supplier",
-  batchNumber: "Batch Number",
-  expiryDate: "Expiry Date",
-  quantity: "Quantity",
-};
-
-const requiredFieldsByDocument: Record<string, TraceFieldKey[]> = {
-  deliveryNote: [
-    "materialName",
-    "itemCode",
-    "supplier",
-    "batchNumber",
-    "expiryDate",
-    "quantity",
-  ],
-  coa: ["materialName", "itemCode", "supplier", "batchNumber", "expiryDate"],
-  materialLabel: [
-    "materialName",
-    "itemCode",
-    "supplier",
-    "batchNumber",
-    "expiryDate",
-    "quantity",
-  ],
-};
-
-const fieldPatterns: Record<TraceFieldKey, RegExp[]> = {
-  materialName: [/(?:material|product|item|description)\s*[:#-]\s*(.+)/i],
-  itemCode: [/(?:item code|material code|code)\s*[:#-]\s*([A-Z0-9-]+)/i],
-  supplier: [/(?:supplier|vendor|manufacturer)\s*[:#-]\s*(.+)/i],
-  batchNumber: [/(?:batch(?: number| no)?|lot)\s*[:#-]\s*([A-Z0-9-]+)/i],
-  expiryDate: [
-    /(?:exp(?:iry|iration)?(?: date)?|exp date)\s*[:#-]\s*([0-9]{4}-[0-9]{2}-[0-9]{2}|[0-9]{2}\/[0-9]{2}\/[0-9]{4})/i,
-  ],
-  quantity: [/(?:qty|quantity)\s*[:#-]\s*([0-9]+(?:\.[0-9]+)?\s*[A-Z]+)/i],
-};
-
-const recommendationLabels: Record<Recommendation, string> = {
-  release: "Release",
-  "manual-review": "Manual review",
-  hold: "Hold",
-};
-
-const normalizeWhitespace = (value: string) =>
-  value.replace(/\s+/g, " ").trim();
-
-const normalizeDate = (value: string) => {
-  const trimmed = normalizeWhitespace(value);
-  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
-    return trimmed;
-  }
-
-  const slashMatch = trimmed.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-  if (slashMatch) {
-    const [, day, month, year] = slashMatch;
-    return `${year}-${month}-${day}`;
-  }
-
-  return trimmed;
-};
-
-const normalizeFieldValue = (field: TraceFieldKey, value: string) => {
-  const normalized = normalizeWhitespace(value);
-  if (field === "expiryDate") {
-    return normalizeDate(normalized);
-  }
-
-  if (field === "quantity") {
-    return normalized.toUpperCase();
-  }
-
-  return normalized;
-};
-
-export const extractFields = (rawText: string): ExtractedFields => {
-  const fields: ExtractedFields = {};
-
-  (Object.keys(fieldPatterns) as TraceFieldKey[]).forEach((field) => {
-    for (const pattern of fieldPatterns[field]) {
-      const match = rawText.match(pattern);
-      if (match?.[1]) {
-        fields[field] = normalizeFieldValue(field, match[1]);
-        break;
-      }
-    }
-  });
-
-  return fields;
-};
+} from "../types";
+import {
+  fieldLabels,
+  recommendationLabels,
+  requiredFieldsByDocument,
+  traceFieldKeys,
+} from "./constants";
+import { prepareDocumentForReview } from "./review";
 
 const buildFieldCheck = (
   key: TraceFieldKey,
@@ -130,9 +43,8 @@ const buildFieldCheck = (
   if (key === "expiryDate" && uniqueValues.length === 1 && uniqueValues[0]) {
     const expiry = new Date(uniqueValues[0]);
     const today = new Date();
-    const diffDays = Math.floor(
-      (expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
-    );
+    const diffMs = expiry.getTime() - today.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
     if (diffDays < 90) {
       verdict = "warning";
       detail = "The material expires within the next 90 days.";
@@ -176,7 +88,7 @@ const buildIssues = (
         severity: "low",
         title: `${document.label} has lower extraction confidence`,
         detail:
-          "The current function app recommends a quick manual check when OCR confidence drops below 85%. Approve the document after review to clear this flag.",
+          "The local prototype recommends a quick manual check when OCR confidence drops below 85%. Approve the document after review to clear this flag.",
         affectedDocuments: [document.kind],
       });
     }
@@ -246,7 +158,7 @@ export const createEmptyAnalysis = (): TraceAnalysis => ({
   matchedFieldCount: 0,
   generatedAt: new Date().toISOString(),
   summary:
-    "No documents are currently loaded. Add three materials documents to generate a TraceCheck decision.",
+    "No documents are currently loaded. Upload the incoming material documents to generate a TraceCheck decision.",
 });
 
 export const analyzeDocuments = (documents: TraceDocument[]): TraceAnalysis => {
@@ -254,14 +166,11 @@ export const analyzeDocuments = (documents: TraceDocument[]): TraceAnalysis => {
     return createEmptyAnalysis();
   }
 
-  const hydratedDocuments = documents.map((document) => ({
-    ...document,
-    extractedFields: Object.keys(document.extractedFields).length
-      ? document.extractedFields
-      : extractFields(document.rawText),
-  }));
+  const hydratedDocuments = documents.map((document) =>
+    prepareDocumentForReview(document),
+  );
 
-  const fieldChecks = (Object.keys(fieldLabels) as TraceFieldKey[]).map((key) =>
+  const fieldChecks = traceFieldKeys.map((key) =>
     buildFieldCheck(key, hydratedDocuments),
   );
 
@@ -280,9 +189,11 @@ export const analyzeDocuments = (documents: TraceDocument[]): TraceAnalysis => {
     if (issue.severity === "high") {
       return sum + 30;
     }
+
     if (issue.severity === "medium") {
       return sum + 12;
     }
+
     return sum + 5;
   }, 0);
 

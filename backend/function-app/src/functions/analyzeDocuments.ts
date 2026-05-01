@@ -1,8 +1,14 @@
 import { HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { app } from "../app";
 import { buildIntegrationStatus } from "../lib/integration";
-import { analyzeDocuments, createEmptyAnalysis } from "../lib/tracecheck";
-import type { AnalyzeDocumentsResponse, TraceDocument } from "../lib/types";
+import {
+  analyzeDocuments,
+  createEmptyAnalysis,
+} from "../../../../shared/tracecheck";
+import type {
+  AnalyzeDocumentsResponse,
+  TraceDocument,
+} from "../../../../shared/types";
 
 const jsonResponse = (body: unknown, status = 200): HttpResponseInit => ({
   status,
