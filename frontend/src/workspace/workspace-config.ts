@@ -10,6 +10,7 @@ import type {
   ReviewStatus,
   TraceFieldKey,
 } from "../../../shared/types";
+import { workspacePaths } from "../routes";
 
 export type WorkspaceDocumentKind = {
   kind: DocumentKind;
@@ -59,25 +60,25 @@ export const documentKindLabels = Object.fromEntries(
 
 export const workspaceSteps: WorkspaceStep[] = [
   {
-    to: "/workspace/upload",
+    to: workspacePaths.upload,
     index: "01",
     label: "Upload",
     meta: "Load the source documents",
   },
   {
-    to: "/workspace/review",
+    to: workspacePaths.review,
     index: "02",
     label: "Review",
     meta: "Correct and approve fields",
   },
   {
-    to: "/workspace/validate",
+    to: workspacePaths.validate,
     index: "03",
     label: "Validate",
     meta: "Check cross-document alignment",
   },
   {
-    to: "/workspace/decision",
+    to: workspacePaths.decision,
     index: "04",
     label: "Decision",
     meta: "Export the release recommendation",

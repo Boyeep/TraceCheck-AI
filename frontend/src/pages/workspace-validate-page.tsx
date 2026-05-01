@@ -1,5 +1,6 @@
 import { AlertTriangle, ArrowRight, CheckCircle2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { workspacePaths } from "../routes";
 import { issueTone, useWorkspaceFlow } from "../workspace";
 
 export const WorkspaceValidatePage = () => {
@@ -89,7 +90,10 @@ export const WorkspaceValidatePage = () => {
             <li>Confirm which flags are acceptable and which block release.</li>
             <li>Move to the final decision page to export the recommendation.</li>
           </ol>
-          <Link className="site-pill site-pill-light workspace-step-cta" to="/workspace/decision">
+          <Link
+            className="site-pill site-pill-light workspace-step-cta"
+            to={workspacePaths.decision}
+          >
             Continue to decision
             <ArrowRight size={16} />
           </Link>

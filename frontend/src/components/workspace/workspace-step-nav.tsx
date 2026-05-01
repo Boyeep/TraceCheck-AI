@@ -1,4 +1,5 @@
 import { NavLink } from "react-router-dom";
+import { workspacePaths } from "../../routes";
 import {
   documentKinds,
   useWorkspaceFlow,
@@ -13,11 +14,11 @@ export const WorkspaceStepNav = () => {
     <nav className="workspace-step-nav">
       {workspaceSteps.map((step) => {
         const isComplete =
-          step.to === "/workspace/upload"
+          step.to === workspacePaths.upload
             ? documents.length === documentKinds.length
-            : step.to === "/workspace/review"
+            : step.to === workspacePaths.review
               ? completedReviewCount > 0
-              : step.to === "/workspace/validate"
+              : step.to === workspacePaths.validate
                 ? analysis.fieldChecks.length > 0
                 : documents.length > 0;
 

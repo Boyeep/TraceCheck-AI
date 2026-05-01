@@ -7,6 +7,10 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { TypedText } from "../components/typed-text";
+import {
+  routePaths,
+  workspacePaths,
+} from "../routes";
 
 const pathCards = [
   {
@@ -14,7 +18,7 @@ const pathCards = [
     title: "See the verification system end to end",
     description:
       "Understand how TraceCheck extracts material fields, surfaces discrepancies, and keeps QA review visible.",
-    href: "/features",
+    href: routePaths.features,
     cta: "View features",
   },
   {
@@ -22,7 +26,7 @@ const pathCards = [
     title: "Run the intake workflow with your own documents",
     description:
       "Upload a delivery note, COA, and material label to verify alignment inside the live product workspace.",
-    href: "/workspace",
+    href: routePaths.workspace,
     cta: "Open workspace",
   },
 ];
@@ -79,10 +83,16 @@ export const HomePage = () => (
               typingSpeed={12}
             />
             <div className="cta-row">
-              <Link className="site-pill site-pill-strong site-pill-large" to="/workspace">
+              <Link
+                className="site-pill site-pill-strong site-pill-large"
+                to={workspacePaths.root}
+              >
                 Open workspace
               </Link>
-              <Link className="site-pill site-pill-light site-pill-large" to="/features">
+              <Link
+                className="site-pill site-pill-light site-pill-large"
+                to={routePaths.features}
+              >
                 Explore features
               </Link>
             </div>

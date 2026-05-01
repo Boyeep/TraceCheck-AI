@@ -1,5 +1,6 @@
 import { Link, Outlet } from "react-router-dom";
 import { SiteNavbar } from "../components/site-navbar";
+import { footerNavItems } from "../routes";
 
 export const SiteLayout = () => (
   <div className="site-root">
@@ -14,8 +15,11 @@ export const SiteLayout = () => (
           </p>
         </div>
         <div className="footer-links">
-          <Link to="/features">Features</Link>
-          <Link to="/workspace">Workspace</Link>
+          {footerNavItems.map((item) => (
+            <Link key={item.to} to={item.to}>
+              {item.label}
+            </Link>
+          ))}
         </div>
       </div>
     </footer>

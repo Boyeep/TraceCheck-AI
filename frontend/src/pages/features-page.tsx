@@ -1,7 +1,6 @@
-import { ArrowRight } from "lucide-react";
-import { Link } from "react-router-dom";
+import { FeatureRouteCard } from "../components/features/feature-route-card";
 import { TypedText } from "../components/typed-text";
-import { featureSpotlights } from "./features-content";
+import { featureSpotlights } from "../features";
 
 export const FeaturesPage = () => (
   <main className="route-main">
@@ -22,32 +21,9 @@ export const FeaturesPage = () => (
 
       <section className="route-section feature-route-shell">
         <div className="feature-route-grid">
-          {featureSpotlights.map((feature) => {
-            const Icon = feature.icon;
-            return (
-              <article className="feature-route-card" key={feature.slug}>
-                <div className="feature-route-head">
-                  <div className="feature-icon">
-                    <Icon size={18} />
-                  </div>
-                  <p className="eyebrow">{feature.eyebrow}</p>
-                </div>
-                <h3>{feature.title}</h3>
-                <p>{feature.summary}</p>
-                <div className="feature-tag-row">
-                  {feature.includes.map((item) => (
-                    <span className="feature-tag" key={item}>
-                      {item}
-                    </span>
-                  ))}
-                </div>
-                <Link className="inline-link" to={feature.href}>
-                  Open area
-                  <ArrowRight size={16} />
-                </Link>
-              </article>
-            );
-          })}
+          {featureSpotlights.map((feature) => (
+            <FeatureRouteCard feature={feature} key={feature.slug} />
+          ))}
         </div>
       </section>
     </div>

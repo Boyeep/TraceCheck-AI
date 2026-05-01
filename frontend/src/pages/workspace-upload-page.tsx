@@ -7,6 +7,7 @@ import {
   useWorkspaceFlow,
   workspaceUploadAccept,
 } from "../workspace";
+import { workspacePaths } from "../routes";
 
 export const WorkspaceUploadPage = () => {
   const {
@@ -96,7 +97,10 @@ export const WorkspaceUploadPage = () => {
             <li>Capture extracted fields and processing metadata per file.</li>
             <li>Move into the QA review step with the OCR baseline preserved.</li>
           </ol>
-          <Link className="site-pill site-pill-light workspace-step-cta" to="/workspace/review">
+          <Link
+            className="site-pill site-pill-light workspace-step-cta"
+            to={workspacePaths.review}
+          >
             Continue to review
             <ArrowRight size={16} />
           </Link>

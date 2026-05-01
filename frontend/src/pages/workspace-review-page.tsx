@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ReviewDocumentCard } from "../components/workspace/review-document-card";
+import { workspacePaths } from "../routes";
 import {
   documentKinds,
   getDocumentByKind,
@@ -102,7 +103,10 @@ export const WorkspaceReviewPage = () => {
             <li>Fix field misses or obvious recognition errors.</li>
             <li>Approve the documents you are satisfied with.</li>
           </ol>
-          <Link className="site-pill site-pill-light workspace-step-cta" to="/workspace/validate">
+          <Link
+            className="site-pill site-pill-light workspace-step-cta"
+            to={workspacePaths.validate}
+          >
             Continue to validation
             <ArrowRight size={16} />
           </Link>

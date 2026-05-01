@@ -1,15 +1,14 @@
 import { Menu, X } from "lucide-react";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
+import {
+  routePaths,
+  siteActionLinks,
+  siteNavItems,
+} from "../routes";
 
 const NAV_SURFACE_START = 24;
 const NAV_SURFACE_RANGE = 140;
-
-const navItems = [
-  { to: "/", label: "Home" },
-  { to: "/features", label: "Features" },
-  { to: "/workspace", label: "Workspace" },
-];
 
 const joinClasses = (...classes: Array<string | false | null | undefined>) =>
   classes.filter(Boolean).join(" ");
@@ -86,7 +85,7 @@ export const SiteNavbar = () => {
             <Link
               aria-label="Go to the TraceCheck AI homepage"
               className="site-brand"
-              to="/"
+              to={routePaths.home}
             >
               <div className={joinClasses("site-brand-mark", hasScrolled && "is-scrolled")}>
                 <img
@@ -114,7 +113,7 @@ export const SiteNavbar = () => {
           </div>
 
           <nav className="site-nav-links">
-            {navItems.map((item) => (
+            {siteNavItems.map((item) => (
               <NavLink
                 className={({ isActive }) =>
                   joinClasses("site-nav-link", isActive && "is-active")
@@ -128,12 +127,15 @@ export const SiteNavbar = () => {
           </nav>
 
           <div className="site-nav-actions">
-            <Link className="site-pill site-pill-light" to="/features">
-              Explore features
-            </Link>
-            <Link className="site-pill site-pill-strong" to="/workspace">
-              Open workspace
-            </Link>
+            {siteActionLinks.map((item) => (
+              <Link
+                className={`site-pill site-pill-${item.tone}`}
+                key={item.to}
+                to={item.to}
+              >
+                {item.label}
+              </Link>
+            ))}
           </div>
 
           <div
@@ -145,7 +147,7 @@ export const SiteNavbar = () => {
           >
             <div className="site-mobile-menu-inner">
               <nav className="site-mobile-links">
-                {navItems.map((item) => (
+                {siteNavItems.map((item) => (
                   <NavLink
                     className={({ isActive }) =>
                       joinClasses("site-mobile-link", isActive && "is-active")
@@ -158,12 +160,15 @@ export const SiteNavbar = () => {
                 ))}
               </nav>
               <div className="site-mobile-actions">
-                <Link className="site-pill site-pill-light" to="/features">
-                  Explore features
-                </Link>
-                <Link className="site-pill site-pill-strong" to="/workspace">
-                  Open workspace
-                </Link>
+                {siteActionLinks.map((item) => (
+                  <Link
+                    className={`site-pill site-pill-${item.tone}`}
+                    key={item.to}
+                    to={item.to}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
               </div>
             </div>
           </div>

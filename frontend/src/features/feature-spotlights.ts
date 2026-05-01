@@ -1,12 +1,25 @@
 import type { LucideIcon } from "lucide-react";
 import {
-  BrainCircuit,
   Cloud,
   FileStack,
   ScanSearch,
   ShieldCheck,
-  TriangleAlert,
 } from "lucide-react";
+import {
+  buildFeaturePath,
+  routePaths,
+} from "../routes";
+
+export type FeatureSection = {
+  title: string;
+  copy: string;
+  bullets: string[];
+};
+
+export type FeatureArchitectureColumn = {
+  title: string;
+  items: string[];
+};
 
 export type FeatureSpotlight = {
   slug: string;
@@ -16,23 +29,18 @@ export type FeatureSpotlight = {
   summary: string;
   icon: LucideIcon;
   includes: string[];
-  sections: Array<{
-    title: string;
-    copy: string;
-    bullets: string[];
-  }>;
-  architectureColumns?: Array<{
-    title: string;
-    items: string[];
-  }>;
-  nextHref: string;
-  nextLabel: string;
+  sections: FeatureSection[];
+  architectureColumns?: FeatureArchitectureColumn[];
+  next: {
+    href: string;
+    label: string;
+  };
 };
 
 export const featureSpotlights: FeatureSpotlight[] = [
   {
     slug: "intake",
-    href: "/features/intake",
+    href: buildFeaturePath("intake"),
     eyebrow: "Intake & Extraction",
     title: "Bring incoming documents into one verified intake stream.",
     summary:
@@ -61,12 +69,14 @@ export const featureSpotlights: FeatureSpotlight[] = [
         ],
       },
     ],
-    nextHref: "/features/review",
-    nextLabel: "QA review",
+    next: {
+      href: buildFeaturePath("review"),
+      label: "QA review",
+    },
   },
   {
     slug: "review",
-    href: "/features/review",
+    href: buildFeaturePath("review"),
     eyebrow: "QA Review Layer",
     title: "Keep human review in the loop before any release decision lands.",
     summary:
@@ -95,12 +105,14 @@ export const featureSpotlights: FeatureSpotlight[] = [
         ],
       },
     ],
-    nextHref: "/features/decision",
-    nextLabel: "Decision engine",
+    next: {
+      href: buildFeaturePath("decision"),
+      label: "Decision engine",
+    },
   },
   {
     slug: "decision",
-    href: "/features/decision",
+    href: buildFeaturePath("decision"),
     eyebrow: "Decision Engine",
     title: "Compare the documents and surface a release-safe recommendation.",
     summary:
@@ -133,18 +145,24 @@ export const featureSpotlights: FeatureSpotlight[] = [
         ],
       },
     ],
-    nextHref: "/features/integration",
-    nextLabel: "Deployment path",
+    next: {
+      href: buildFeaturePath("integration"),
+      label: "Deployment path",
+    },
   },
   {
     slug: "integration",
-    href: "/features/integration",
+    href: buildFeaturePath("integration"),
     eyebrow: "Deployment Path",
     title: "Keep the verification flow deployable across local and Azure paths.",
     summary:
       "The frontend is already split from the backend, and the product can target browser fallback, Express, or the Azure Functions shape without changing the core workflow.",
     icon: Cloud,
-    includes: ["Azure-ready backend", "Split frontend/backend structure", "Fallback-safe runtime"],
+    includes: [
+      "Azure-ready backend",
+      "Split frontend/backend structure",
+      "Fallback-safe runtime",
+    ],
     sections: [
       {
         title: "Runtime modes",
@@ -193,7 +211,16 @@ export const featureSpotlights: FeatureSpotlight[] = [
         ],
       },
     ],
-    nextHref: "/workspace",
-    nextLabel: "Live workspace",
+    next: {
+      href: routePaths.workspace,
+      label: "Live workspace",
+    },
   },
 ];
+
+const featureSpotlightMap = new Map(
+  featureSpotlights.map((feature) => [feature.slug, feature]),
+);
+
+export const getFeatureSpotlightBySlug = (slug?: string) =>
+  slug ? featureSpotlightMap.get(slug) : undefined;

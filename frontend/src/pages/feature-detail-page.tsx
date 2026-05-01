@@ -1,13 +1,16 @@
-import { ArrowLeft, ArrowRight } from "lucide-react";
-import { Link, Navigate, useParams } from "react-router-dom";
-import { featureSpotlights } from "./features-content";
+import { Navigate, useParams } from "react-router-dom";
+import { FeatureArchitectureGrid } from "../components/features/feature-architecture-grid";
+import { FeaturePageNav } from "../components/features/feature-page-nav";
+import { FeatureSectionsGrid } from "../components/features/feature-sections-grid";
+import { getFeatureSpotlightBySlug } from "../features";
+import { routePaths } from "../routes";
 
 export const FeatureDetailPage = () => {
   const { featureSlug } = useParams();
-  const feature = featureSpotlights.find((entry) => entry.slug === featureSlug);
+  const feature = getFeatureSpotlightBySlug(featureSlug);
 
   if (!feature) {
-    return <Navigate replace to="/features" />;
+    return <Navigate replace to={routePaths.features} />;
   }
 
   const Icon = feature.icon;
@@ -26,19 +29,7 @@ export const FeatureDetailPage = () => {
             </div>
           </div>
 
-          <div className="feature-detail-grid">
-            {feature.sections.map((section) => (
-              <article className="feature-card" key={section.title}>
-                <h3>{section.title}</h3>
-                <p>{section.copy}</p>
-                <ul className="feature-list">
-                  {section.bullets.map((bullet) => (
-                    <li key={bullet}>{bullet}</li>
-                  ))}
-                </ul>
-              </article>
-            ))}
-          </div>
+          <FeatureSectionsGrid sections={feature.sections} />
         </section>
 
         {feature.architectureColumns ? (
@@ -50,32 +41,12 @@ export const FeatureDetailPage = () => {
               </div>
             </div>
 
-            <div className="architecture-grid">
-              {feature.architectureColumns.map((column) => (
-                <article className="architecture-card" key={column.title}>
-                  <h3>{column.title}</h3>
-                  <ul className="feature-list">
-                    {column.items.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ul>
-                </article>
-              ))}
-            </div>
+            <FeatureArchitectureGrid columns={feature.architectureColumns} />
           </section>
         ) : null}
 
         <section className="route-section feature-nav-section">
-          <div className="feature-next-row">
-            <Link className="inline-link" to="/features">
-              <ArrowLeft size={16} />
-              Back to feature hub
-            </Link>
-            <Link className="site-pill site-pill-light" to={feature.nextHref}>
-              {feature.nextLabel}
-              <ArrowRight size={16} />
-            </Link>
-          </div>
+          <FeaturePageNav nextHref={feature.next.href} nextLabel={feature.next.label} />
         </section>
       </div>
     </main>
