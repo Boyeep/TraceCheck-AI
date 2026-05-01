@@ -1,6 +1,6 @@
 import { AlertTriangle, ArrowRight, CheckCircle2 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { issueTone, useWorkspaceFlow } from "../workspace/workspace-flow";
+import { issueTone, useWorkspaceFlow } from "../workspace";
 
 export const WorkspaceValidatePage = () => {
   const { analysis } = useWorkspaceFlow();

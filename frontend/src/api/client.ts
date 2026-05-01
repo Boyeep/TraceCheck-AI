@@ -12,12 +12,7 @@ import {
   extractFields,
   prepareDocumentForReview,
 } from "../../../shared/tracecheck";
-
-const documentLabels: Record<DocumentKind, string> = {
-  deliveryNote: "Delivery Note",
-  coa: "Certificate of Analysis",
-  materialLabel: "Material Label",
-};
+import { documentKindLabels } from "../workspace/workspace-config";
 
 const configuredApiBaseUrl = (import.meta.env.VITE_TRACECHECK_API_BASE_URL ?? "")
   .trim()
@@ -30,7 +25,7 @@ const unreachableApiLabel = configuredApiBaseUrl
   ? `The configured TraceCheck API at ${configuredApiBaseUrl} could not be reached, so the frontend is using the local fallback path.`
   : "The TraceCheck API could not be reached, so the frontend is using the local fallback path.";
 
-const defaultStatus: AzureIntegrationStatus = {
+export const defaultIntegrationStatus: AzureIntegrationStatus = {
   mode: "fallback",
   documentIntelligenceConfigured: false,
   openAiConfigured: false,
@@ -56,7 +51,7 @@ const createLocalDocument = async (
     return prepareDocumentForReview({
       id: `${kind}-${crypto.randomUUID()}`,
       kind,
-      label: documentLabels[kind],
+      label: documentKindLabels[kind],
       displayName: file.name,
       rawText,
       sourceMode,
@@ -78,7 +73,7 @@ Hint: Start the TraceCheck API and configure Azure credentials to run OCR on ima
   return prepareDocumentForReview({
     id: `${kind}-${crypto.randomUUID()}`,
     kind,
-    label: documentLabels[kind],
+    label: documentKindLabels[kind],
     displayName: file.name,
     rawText,
     sourceMode,
@@ -102,7 +97,7 @@ export const fetchIntegrationStatus = async (): Promise<AzureIntegrationStatus> 
 
     return (await response.json()) as AzureIntegrationStatus;
   } catch {
-    return defaultStatus;
+    return defaultIntegrationStatus;
   }
 };
 
@@ -133,7 +128,7 @@ export const extractDocumentWithApi = async (
   } catch {
     return {
       document: await createLocalDocument(kind, file),
-      integrationStatus: defaultStatus,
+      integrationStatus: defaultIntegrationStatus,
     };
   }
 };
@@ -158,7 +153,7 @@ export const analyzeDocumentsWithApi = async (
   } catch {
     return {
       analysis: documents.length ? analyzeDocuments(documents) : createEmptyAnalysis(),
-      integrationStatus: defaultStatus,
+      integrationStatus: defaultIntegrationStatus,
     };
   }
 };

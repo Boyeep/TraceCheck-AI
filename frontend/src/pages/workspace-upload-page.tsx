@@ -2,9 +2,11 @@ import { ArrowRight, Cloud, Upload } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
   documentKinds,
+  getDocumentByKind,
   getProcessingLabel,
   useWorkspaceFlow,
-} from "../workspace/workspace-flow";
+  workspaceUploadAccept,
+} from "../workspace";
 
 export const WorkspaceUploadPage = () => {
   const {
@@ -33,9 +35,7 @@ export const WorkspaceUploadPage = () => {
 
           <div className="upload-grid">
             {documentKinds.map((entry) => {
-              const currentDocument = documents.find(
-                (document) => document.kind === entry.kind,
-              );
+              const currentDocument = getDocumentByKind(documents, entry.kind);
 
               return (
                 <label className="upload-card" key={entry.kind}>
@@ -49,7 +49,7 @@ export const WorkspaceUploadPage = () => {
                     </div>
                   </div>
                   <input
-                    accept=".txt,.md,.json,.csv,image/*,.pdf"
+                    accept={workspaceUploadAccept}
                     className="sr-only"
                     onChange={(event) =>
                       updateDocument(entry.kind, event.target.files?.[0])
@@ -129,7 +129,7 @@ export const WorkspaceUploadPage = () => {
           </div>
           <div className="workspace-mini-stack">
             {documentKinds.map((entry) => {
-              const document = documents.find((item) => item.kind === entry.kind);
+              const document = getDocumentByKind(documents, entry.kind);
               return (
                 <div className="workspace-mini-row" key={entry.kind}>
                   <div>

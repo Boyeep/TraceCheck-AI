@@ -3,20 +3,15 @@ import {
   ArrowRight,
   CheckCircle2,
   ClipboardCheck,
-  FileSearch,
-  RefreshCcw,
   ScanSearch,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { ReviewDocumentCard } from "../components/workspace/review-document-card";
 import {
-  countDocumentOverrides,
   documentKinds,
-  fieldLabels,
-  fieldOrder,
-  formatReviewedAt,
-  reviewTheme,
+  getDocumentByKind,
   useWorkspaceFlow,
-} from "../workspace/workspace-flow";
+} from "../workspace";
 
 export const WorkspaceReviewPage = () => {
   const {
@@ -47,126 +42,19 @@ export const WorkspaceReviewPage = () => {
 
           <div className="document-grid">
             {documentKinds.map((entry) => {
-              const document = documents.find((item) => item.kind === entry.kind);
-              const reviewConfig = document
-                ? reviewTheme[document.reviewStatus ?? "pending"]
-                : null;
+              const document = getDocumentByKind(documents, entry.kind);
 
               return (
-                <section
-                  className={`document-card ${document ? reviewConfig?.tone : ""}`}
+                <ReviewDocumentCard
+                  document={document}
                   key={entry.kind}
-                >
-                  <div className="document-card-head">
-                    <div>
-                      <h3>{entry.label}</h3>
-                      <p>{document?.displayName ?? "No document loaded yet"}</p>
-                    </div>
-                    {document ? (
-                      <div className="document-card-meta">
-                        <span className={`review-pill ${reviewConfig?.tone}`}>
-                          {reviewConfig?.label}
-                        </span>
-                        <span className="confidence-chip">
-                          {Math.round(document.confidence * 100)}% confidence
-                        </span>
-                      </div>
-                    ) : null}
-                  </div>
-
-                  {document ? (
-                    <>
-                      <div className="document-actions">
-                        <button
-                          className="mini-action"
-                          disabled={document.reviewStatus === "approved"}
-                          onClick={() => approveDocumentReview(document.id)}
-                          type="button"
-                        >
-                          <CheckCircle2 size={15} />
-                          Approve review
-                        </button>
-                        <button
-                          className="mini-action"
-                          disabled={!countDocumentOverrides(document)}
-                          onClick={() => resetDocumentToOcr(document.id)}
-                          type="button"
-                        >
-                          <RefreshCcw size={15} />
-                          Reset to OCR
-                        </button>
-                      </div>
-
-                      <p className="reviewed-at">
-                        Reviewed: {formatReviewedAt(document.reviewedAt)}
-                      </p>
-
-                      <div className="field-list">
-                        {fieldOrder.map((field) => {
-                          const currentValue = document.extractedFields[field] ?? "";
-                          const ocrValue = document.ocrExtractedFields?.[field] ?? "";
-                          const isOverridden = currentValue.trim() !== ocrValue.trim();
-
-                          return (
-                            <div
-                              className={`field-editor ${isOverridden ? "is-overridden" : ""}`}
-                              key={field}
-                            >
-                              <div className="field-label-row">
-                                <span>{fieldLabels[field]}</span>
-                                <strong>
-                                  {isOverridden ? "Manual override" : "Matches OCR"}
-                                </strong>
-                              </div>
-                              <input
-                                aria-label={`${entry.label} ${fieldLabels[field]}`}
-                                className={`field-input ${isOverridden ? "is-overridden" : ""}`}
-                                onChange={(event) =>
-                                  updateReviewedField(
-                                    document.id,
-                                    field,
-                                    event.target.value,
-                                  )
-                                }
-                                placeholder="Not found"
-                                type="text"
-                                value={currentValue}
-                              />
-                              <div className="field-helper-row">
-                                <span className="field-helper">
-                                  OCR baseline: {ocrValue || "No OCR value detected"}
-                                </span>
-                                {isOverridden ? (
-                                  <button
-                                    className="field-restore"
-                                    onClick={() => restoreFieldToOcr(document.id, field)}
-                                    type="button"
-                                  >
-                                    Restore field
-                                  </button>
-                                ) : (
-                                  <span className="field-helper subtle">
-                                    Verified output is aligned with the captured OCR field.
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                      <ul className="note-list">
-                        {document.notes.map((note) => (
-                          <li key={note}>{note}</li>
-                        ))}
-                      </ul>
-                    </>
-                  ) : (
-                    <div className="empty-card">
-                      <FileSearch size={24} />
-                      <p>This slot is waiting for a document.</p>
-                    </div>
-                  )}
-                </section>
+                  onApprove={approveDocumentReview}
+                  onResetToOcr={resetDocumentToOcr}
+                  onRestoreField={restoreFieldToOcr}
+                  onUpdateField={updateReviewedField}
+                  subtitle="No document loaded yet"
+                  title={entry.label}
+                />
               );
             })}
           </div>

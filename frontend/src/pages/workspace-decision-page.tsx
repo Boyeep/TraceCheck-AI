@@ -1,5 +1,11 @@
 import { Cloud, Download } from "lucide-react";
-import { useWorkspaceFlow, documentKinds, formatReviewedAt, reviewTheme } from "../workspace/workspace-flow";
+import {
+  documentKinds,
+  formatReviewedAt,
+  getDocumentByKind,
+  reviewTheme,
+  useWorkspaceFlow,
+} from "../workspace";
 
 export const WorkspaceDecisionPage = () => {
   const {
@@ -66,7 +72,7 @@ export const WorkspaceDecisionPage = () => {
           </div>
           <div className="workspace-mini-stack">
             {documentKinds.map((entry) => {
-              const document = documents.find((item) => item.kind === entry.kind);
+              const document = getDocumentByKind(documents, entry.kind);
               const reviewState = reviewTheme[document?.reviewStatus ?? "pending"];
               return (
                 <div className="workspace-mini-row" key={entry.kind}>
