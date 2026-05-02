@@ -6,13 +6,17 @@ import type {
   SourceMode,
   TraceDocument,
 } from "../../../shared/types";
+import { createTraceDocument } from "../../../shared/trace-document";
 import {
   analyzeDocuments,
   createEmptyAnalysis,
   extractFields,
   prepareDocumentForReview,
 } from "../../../shared/tracecheck";
-import { documentKindLabels } from "../workspace/workspace-config";
+import {
+  buildFallbackBinaryText,
+  isTextLikeUpload,
+} from "../../../shared/uploads";
 
 const configuredApiBaseUrl = (import.meta.env.VITE_TRACECHECK_API_BASE_URL ?? "")
   .trim()
@@ -35,9 +39,6 @@ export const defaultIntegrationStatus: AzureIntegrationStatus = {
   reason: unreachableApiLabel,
 };
 
-const isTextLikeUpload = (fileName: string, contentType: string) =>
-  contentType.startsWith("text/") || /\.(txt|md|json|csv)$/i.test(fileName);
-
 const createLocalDocument = async (
   kind: DocumentKind,
   file: File,
@@ -48,11 +49,9 @@ const createLocalDocument = async (
 
   if (sourceMode === "uploaded-text") {
     const rawText = await file.text();
-    return prepareDocumentForReview({
-      id: `${kind}-${crypto.randomUUID()}`,
+    return prepareDocumentForReview(createTraceDocument({
       kind,
-      label: documentKindLabels[kind],
-      displayName: file.name,
+      fileName: file.name,
       rawText,
       sourceMode,
       contentType: file.type || "text/plain",
@@ -63,18 +62,14 @@ const createLocalDocument = async (
       ],
       processingSource: "server-fallback",
       serviceLabel: "Browser fallback",
-    });
+    }));
   }
 
-  const rawText = `FILE NAME: ${file.name}
-OCR MODE: Browser fallback
-Hint: Start the TraceCheck API and configure Azure credentials to run OCR on images or PDFs.`;
+  const rawText = buildFallbackBinaryText(file.name, "Browser fallback");
 
-  return prepareDocumentForReview({
-    id: `${kind}-${crypto.randomUUID()}`,
+  return prepareDocumentForReview(createTraceDocument({
     kind,
-    label: documentKindLabels[kind],
-    displayName: file.name,
+    fileName: file.name,
     rawText,
     sourceMode,
     contentType: file.type || "application/octet-stream",
@@ -85,7 +80,7 @@ Hint: Start the TraceCheck API and configure Azure credentials to run OCR on ima
     ],
     processingSource: "server-fallback",
     serviceLabel: "Browser fallback",
-  });
+  }));
 };
 
 export const fetchIntegrationStatus = async (): Promise<AzureIntegrationStatus> => {

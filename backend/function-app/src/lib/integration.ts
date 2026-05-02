@@ -4,11 +4,10 @@ import type {
   TraceDocument,
 } from "../../../../shared/types";
 import { extractFields } from "../../../../shared/tracecheck";
+import { createTraceDocument } from "../../../../shared/trace-document";
 import {
   buildBinaryUploadResponse,
   buildTextUploadResponse,
-  createTraceDocument,
-  isTextLikeUpload,
 } from "../../../../shared/server/document-upload";
 import { buildAzureIntegrationStatus } from "../../../../shared/server/integration-status";
 import { getDocumentIntelligenceConfig } from "../../../../shared/server/azure-document-intelligence";

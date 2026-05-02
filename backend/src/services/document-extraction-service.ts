@@ -4,11 +4,11 @@ import type {
   SourceMode,
   TraceDocument,
 } from "../../../shared/types";
+import { createTraceDocument } from "../../../shared/trace-document";
+import { isTextLikeUpload } from "../../../shared/uploads";
 import {
   buildBinaryUploadResponse,
   buildTextUploadResponse,
-  createTraceDocument,
-  isTextLikeUpload,
 } from "../../../shared/server/document-upload";
 import { enrichExtractedFields } from "../model-layer";
 import { buildIntegrationStatus } from "./integration-status-service";

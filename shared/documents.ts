@@ -1,4 +1,4 @@
-import type { DocumentKind } from "./types";
+import type { DocumentKind } from "./types/primitives";
 
 export const documentKinds: DocumentKind[] = [
   "deliveryNote",

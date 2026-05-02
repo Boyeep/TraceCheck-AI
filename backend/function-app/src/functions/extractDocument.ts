@@ -1,7 +1,7 @@
 import { HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { app } from "../app";
 import { isDocumentKind } from "../../../../shared/documents";
-import { isTextLikeUpload } from "../../../../shared/server/document-upload";
+import { isTextLikeUpload } from "../../../../shared/uploads";
 import {
   buildIntegrationStatus,
   extractDocumentFromBinary,
