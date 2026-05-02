@@ -7,7 +7,6 @@ TraceCheck AI is a hackathon prototype for pharma incoming-material verification
 - `frontend/` contains the Vite + React product UI
 - `backend/` contains the Express API and the Azure Functions app
 - `shared/` contains the TraceCheck domain types and validation logic used by the frontend and Express API
-- `docs/` contains the hackathon strategy notes and source briefing docs
 
 ## What is live
 
