@@ -11,10 +11,13 @@ export const registerAnalysisRoutes = (app: Express) => {
     const documents = Array.isArray(request.body?.documents)
       ? (request.body.documents as TraceDocument[])
       : [];
+    const analysis = await buildAnalysis(documents);
 
     const payload: AnalyzeDocumentsResponse = {
-      analysis: await buildAnalysis(documents),
-      integrationStatus: buildIntegrationStatus(),
+      analysis,
+      integrationStatus: buildIntegrationStatus({
+        mode: analysis.summarySource === "azure-openai" ? "azure" : "fallback",
+      }),
     };
 
     response.json(payload);

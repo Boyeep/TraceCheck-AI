@@ -83,7 +83,7 @@ export const WorkspaceDecisionPage = () => {
         <article className="surface-card">
           <PanelHeader label="Azure Integration" title="Backend readiness" />
           <div
-            className={`integration-badge ${integrationStatus.mode === "azure" ? "is-live" : "is-fallback"}`}
+            className={`integration-badge ${integrationStatus.readiness.binaryOcr === "azure" ? "is-live" : "is-fallback"}`}
           >
             <Cloud size={16} />
             {integrationModeLabel}

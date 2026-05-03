@@ -31,6 +31,11 @@ const unreachableApiLabel = configuredApiBaseUrl
 
 export const defaultIntegrationStatus: AzureIntegrationStatus = {
   mode: "fallback",
+  readiness: {
+    binaryOcr: "fallback",
+    fieldExtraction: "fallback",
+    decisionSummary: "fallback",
+  },
   documentIntelligenceConfigured: false,
   openAiConfigured: false,
   modelId: "prebuilt-read",

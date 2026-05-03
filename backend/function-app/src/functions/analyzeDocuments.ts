@@ -24,10 +24,13 @@ export async function analyzeDocumentsHandler(
 ): Promise<HttpResponseInit> {
   const payload = (await request.json()) as { documents?: TraceDocument[] };
   const documents = Array.isArray(payload.documents) ? payload.documents : [];
+  const analysis = documents.length ? analyzeDocuments(documents) : createEmptyAnalysis();
 
   const responseBody: AnalyzeDocumentsResponse = {
-    analysis: documents.length ? analyzeDocuments(documents) : createEmptyAnalysis(),
-    integrationStatus: buildIntegrationStatus(),
+    analysis,
+    integrationStatus: buildIntegrationStatus({
+      mode: "fallback",
+    }),
   };
 
   return jsonResponse(responseBody);

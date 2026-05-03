@@ -35,7 +35,9 @@ export const buildBinaryUploadResponse = async ({
         processingSource: configuredFallback.processingSource,
         serviceLabel: configuredFallback.serviceLabel,
       }),
-      integrationStatus: buildIntegrationStatus(),
+      integrationStatus: buildIntegrationStatus({
+        mode: "fallback",
+      }),
     };
   }
 
@@ -56,7 +58,9 @@ export const buildBinaryUploadResponse = async ({
         processingSource: success.processingSource,
         serviceLabel: success.serviceLabel,
       }),
-      integrationStatus: buildIntegrationStatus(),
+      integrationStatus: buildIntegrationStatus({
+        mode: "azure",
+      }),
     };
   } catch (error) {
     const errorMessage =
@@ -74,9 +78,10 @@ export const buildBinaryUploadResponse = async ({
         processingSource: errorFallback.processingSource,
         serviceLabel: errorFallback.serviceLabel,
       }),
-      integrationStatus: buildIntegrationStatus(
-        `Azure extraction failed and TraceCheck used fallback mode instead. ${errorMessage}`,
-      ),
+      integrationStatus: buildIntegrationStatus({
+        mode: "fallback",
+        reason: `Azure extraction failed and TraceCheck used fallback mode instead. ${errorMessage}`,
+      }),
     };
   }
 };

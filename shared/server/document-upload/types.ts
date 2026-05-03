@@ -2,6 +2,7 @@ import type {
   AzureIntegrationStatus,
   DocumentKind,
   ExtractDocumentResponse,
+  IntegrationMode,
   SourceMode,
   TraceDocument,
 } from "../../types";
@@ -22,8 +23,13 @@ export type TraceDocumentBuilder = (
   options: TraceDocumentBuildOptions,
 ) => Promise<TraceDocument>;
 
+export type IntegrationStatusBuilderOptions = {
+  mode: IntegrationMode;
+  reason?: string;
+};
+
 export type IntegrationStatusBuilder = (
-  reason?: string,
+  options?: IntegrationStatusBuilderOptions,
 ) => AzureIntegrationStatus;
 
 export type TextUploadResponseOptions = {

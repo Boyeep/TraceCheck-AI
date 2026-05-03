@@ -8,8 +8,8 @@ const app = createApp();
 app.listen(port, () => {
   const status = buildIntegrationStatus();
   const modeLine =
-    status.mode === "azure"
-      ? `Azure Document Intelligence active with model ${status.modelId}.`
+    status.readiness.binaryOcr === "azure"
+      ? `Azure Document Intelligence ready with model ${status.modelId}.`
       : "Fallback mode active. Configure Azure credentials to enable live OCR.";
 
   console.log(`TraceCheck API listening on http://127.0.0.1:${port}`);

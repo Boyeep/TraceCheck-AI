@@ -17,6 +17,7 @@
     "build:backend": "npm run build -w tracecheck-backend",
     "build:functions": "npm run build -w tracecheck-function-app",
     "check:backend": "npm run check -w tracecheck-backend",
+    "test:backend": "npm run test -w tracecheck-backend",
     "preview": "npm run preview -w tracecheck-frontend",
     "start:backend": "npm run start -w tracecheck-backend",
     "docker:build": "docker compose build",

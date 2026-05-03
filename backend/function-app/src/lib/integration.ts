@@ -1,5 +1,6 @@
 import type {
   DocumentKind,
+  IntegrationMode,
   SourceMode,
   TraceDocument,
 } from "../../../../shared/types";
@@ -49,13 +50,21 @@ const buildDocument = ({
   });
 };
 
-export const buildIntegrationStatus = (reason?: string) => {
+type BuildIntegrationStatusOptions = {
+  mode?: IntegrationMode;
+  reason?: string;
+};
+
+export const buildIntegrationStatus = (
+  options: BuildIntegrationStatusOptions = {},
+) => {
   const { configured, modelId } = getDocumentIntelligenceConfig();
 
   return buildAzureIntegrationStatus({
     documentIntelligenceConfigured: configured,
     modelId,
-    reason,
+    mode: options.mode ?? (configured ? "azure" : "fallback"),
+    reason: options.reason,
   });
 };
 

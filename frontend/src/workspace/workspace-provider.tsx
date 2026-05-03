@@ -246,7 +246,9 @@ export const WorkspaceFlowProvider = ({ children }: { children: ReactNode }) => 
 
   const recommendationConfig = recommendationTheme[analysis.recommendation];
   const integrationModeLabel =
-    integrationStatus.mode === "azure" ? "Azure live mode" : "Fallback mode";
+    integrationStatus.readiness.binaryOcr === "azure"
+      ? "Azure OCR ready"
+      : "Fallback OCR mode";
   const reviewSummary = getReviewSummary(documents);
 
   const value: WorkspaceFlowContextValue = {

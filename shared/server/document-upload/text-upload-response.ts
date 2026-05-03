@@ -11,8 +11,8 @@ export const buildTextUploadResponse = async ({
   serviceLabel,
   buildDocument,
   buildIntegrationStatus,
-}: TextUploadResponseOptions): Promise<ExtractDocumentResponse> => ({
-  document: await buildDocument({
+}: TextUploadResponseOptions): Promise<ExtractDocumentResponse> => {
+  const document = await buildDocument({
     kind,
     fileName,
     rawText,
@@ -22,6 +22,15 @@ export const buildTextUploadResponse = async ({
     notes: [note],
     processingSource,
     serviceLabel,
-  }),
-  integrationStatus: buildIntegrationStatus(),
-});
+  });
+
+  return {
+    document,
+    integrationStatus: buildIntegrationStatus({
+      mode:
+        document.processingSource === "azure-openai-extraction"
+          ? "azure"
+          : "fallback",
+    }),
+  };
+};

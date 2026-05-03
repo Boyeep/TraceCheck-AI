@@ -100,7 +100,7 @@ export const WorkspaceUploadPage = () => {
         <article className="surface-card">
           <PanelHeader label="Integration Mode" title="Current processing path" />
           <div
-            className={`integration-badge ${integrationStatus.mode === "azure" ? "is-live" : "is-fallback"}`}
+            className={`integration-badge ${integrationStatus.readiness.binaryOcr === "azure" ? "is-live" : "is-fallback"}`}
           >
             <Cloud size={16} />
             {integrationModeLabel}

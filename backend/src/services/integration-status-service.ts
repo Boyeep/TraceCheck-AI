@@ -1,10 +1,18 @@
-import type { AzureIntegrationStatus } from "../../../shared/types";
+import type {
+  AzureIntegrationStatus,
+  IntegrationMode,
+} from "../../../shared/types";
 import { getDocumentIntelligenceConfig } from "../../../shared/server/azure-document-intelligence";
 import { buildAzureIntegrationStatus } from "../../../shared/server/integration-status";
 import { getModelLayerStatus } from "../model-layer";
 
+type BuildIntegrationStatusOptions = {
+  mode?: IntegrationMode;
+  reason?: string;
+};
+
 export const buildIntegrationStatus = (
-  reason?: string,
+  options: BuildIntegrationStatusOptions = {},
 ): AzureIntegrationStatus => {
   const {
     configured: documentIntelligenceConfigured,
@@ -20,12 +28,13 @@ export const buildIntegrationStatus = (
   return buildAzureIntegrationStatus({
     documentIntelligenceConfigured,
     modelId,
+    mode: options.mode ?? (documentIntelligenceConfigured ? "azure" : "fallback"),
     modelLayerStatus: {
       openAiConfigured,
       openAiDeployment,
       extractionStrategy,
       explanationStrategy,
     },
-    reason,
+    reason: options.reason,
   });
 };
