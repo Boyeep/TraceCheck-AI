@@ -4,6 +4,7 @@ import type {
   Response,
 } from "express";
 import { ApiError } from "./api-error";
+import { buildSessionActor } from "./auth-service";
 import { recordAuditEvent } from "./audit-service";
 import {
   getAllPermissions,
@@ -28,7 +29,14 @@ type ResponseLocals = {
 
 const getLocals = (response: Response) => response.locals as ResponseLocals;
 
-const getHeaderToken = (request: Request) => {
+export type RequestAuthToken = {
+  source: "bearer" | "x-api-key";
+  token: string;
+};
+
+export const getRequestAuthToken = (
+  request: Request,
+): RequestAuthToken | undefined => {
   const authorization = request.headers.authorization?.trim();
   if (authorization?.toLowerCase().startsWith("bearer ")) {
     return {
@@ -72,15 +80,23 @@ const setResponseActor = (response: Response, actor: RequestActor) => {
   getLocals(response).actor = actor;
 };
 
-export const authenticateRequest: RequestHandler = (request, response, next) => {
+export const authenticateRequest: RequestHandler = async (request, response, next) => {
   const config = getRuntimeConfig();
+  const token = getRequestAuthToken(request);
+  const sessionActor =
+    token?.source === "bearer" ? await buildSessionActor(token.token) : undefined;
+  if (sessionActor) {
+    setResponseActor(response, sessionActor);
+    next();
+    return;
+  }
+
   if (config.authMode === "disabled") {
     setResponseActor(response, buildDevelopmentActor());
     next();
     return;
   }
 
-  const token = getHeaderToken(request);
   if (!token?.token) {
     incrementCounter("auth.denied", { reason: "missing_token" });
     recordAuditEvent({
@@ -101,6 +117,31 @@ export const authenticateRequest: RequestHandler = (request, response, next) => 
       "Authentication is required for this endpoint.",
       {
         "WWW-Authenticate": 'Bearer realm="TraceCheck API"',
+      },
+    ));
+    return;
+  }
+
+  if (config.authMode === "session") {
+    incrementCounter("auth.denied", { reason: "invalid_session" });
+    recordAuditEvent({
+      timestamp: new Date().toISOString(),
+      requestId: getResponseRequestId(response),
+      actorId: "unknown-session",
+      action: "auth.authenticate",
+      resource: request.path,
+      outcome: "denied",
+      details: {
+        method: request.method,
+        requestIp: getRequestIp(request),
+        reason: "invalid_session",
+      },
+    });
+    next(new ApiError(
+      401,
+      "Your sign-in session is no longer valid.",
+      {
+        "WWW-Authenticate": 'Bearer error="invalid_token"',
       },
     ));
     return;

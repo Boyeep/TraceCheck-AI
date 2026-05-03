@@ -21,12 +21,23 @@ TraceCheck AI is a hackathon prototype for pharma incoming-material verification
 
 ## Production-readiness scaffold
 
+- Session auth with PostgreSQL-backed users and hashed bearer-session tokens
 - Token-based auth and permission scaffolding for API and ops routes
 - In-memory rate limiting for upload, analysis, status, health, and ops endpoints
 - Health, readiness, metrics, and audit endpoints in the Express API
 - Structured alert webhook and audit-log sinks for production wiring
 - Playwright E2E smoke coverage plus backend route smoke tests
 - A local perf smoke script and a GitHub Actions CI workflow
+
+## Auth persistence
+
+- `POST /api/auth/signup` creates a QA operator account and returns a bearer session
+- `POST /api/auth/login` returns a new bearer session for an existing account
+- `GET /api/auth/session` validates the active session token
+- `POST /api/auth/logout` revokes the current session
+- Session tokens are stored hashed in the database
+- In development, the backend falls back to `pg-mem` when no database URL is configured
+- In production, use PostgreSQL and set `TRACECHECK_DATABASE_URL`
 
 ## Azure integration layer
 
@@ -131,6 +142,11 @@ AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT=
 AZURE_DOCUMENT_INTELLIGENCE_KEY=
 AZURE_DOCUMENT_INTELLIGENCE_MODEL_ID=prebuilt-read
 PORT=8787
+TRACECHECK_AUTH_MODE=session
+TRACECHECK_DATABASE_DRIVER=postgres
+TRACECHECK_DATABASE_URL=postgresql://tracecheck:tracecheck@127.0.0.1:5432/tracecheck
+TRACECHECK_DATABASE_SSL=false
+TRACECHECK_DATABASE_AUTO_MIGRATE=true
 ```
 
 Copy `frontend/.env.example` to `frontend/.env` when you want to override the default API wiring:
@@ -143,6 +159,7 @@ VITE_TRACECHECK_API_KEY=
 ```
 
 Without these values, the app still works in fallback mode and the API status endpoint will report that Azure is not configured.
+If you omit the database URL in development, auth storage falls back to `pg-mem`, which is useful for local work but not persistent across restarts.
 
 Frontend wiring options:
 
@@ -162,8 +179,9 @@ If the frontend is served from a different domain than the deployed Function App
 
 The root `docker-compose.yml` is set up for the split repo structure:
 
+- `postgres` runs the persistent auth/session database
 - `frontend` builds the Vite app, serves it with `vite preview`, and proxies `/api` to the backend container
-- `backend` runs the Express API directly from the split `backend/` workspace
+- `backend` runs the Express API directly from the split `backend/` workspace and auto-runs DB migrations on boot
 - Azure credentials remain optional, so the compose stack still boots in fallback mode without extra secrets
 
 Optional Azure values can be injected into Docker Compose from your shell or a root `.env` file:

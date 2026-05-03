@@ -35,6 +35,12 @@ export const buildReadinessPayload = () => {
         mode: config.authMode,
         configuredActors: config.authTokens.length,
       },
+      database: {
+        driver: config.databaseDriver,
+        configured: Boolean(config.databaseUrl) || config.databaseDriver === "pg-mem",
+        autoMigrate: config.databaseAutoMigrate,
+        ssl: config.databaseSsl,
+      },
       uploads: {
         maxFileSizeMb: config.maxUploadFileSizeMb,
         allowedMimeTypes: config.allowedUploadMimeTypes,

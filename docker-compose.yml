@@ -1,14 +1,38 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: tracecheck-postgres
+    environment:
+      POSTGRES_DB: tracecheck
+      POSTGRES_PASSWORD: tracecheck
+      POSTGRES_USER: tracecheck
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tracecheck -d tracecheck"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    volumes:
+      - tracecheck-postgres-data:/var/lib/postgresql/data
+
   backend:
     build:
       context: .
       dockerfile: backend/Dockerfile
     container_name: tracecheck-backend
+    depends_on:
+      postgres:
+        condition: service_healthy
     environment:
       PORT: "8787"
       AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT: ${AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT:-}
       AZURE_DOCUMENT_INTELLIGENCE_KEY: ${AZURE_DOCUMENT_INTELLIGENCE_KEY:-}
       AZURE_DOCUMENT_INTELLIGENCE_MODEL_ID: ${AZURE_DOCUMENT_INTELLIGENCE_MODEL_ID:-prebuilt-read}
+      TRACECHECK_AUTH_MODE: ${TRACECHECK_AUTH_MODE:-session}
+      TRACECHECK_DATABASE_DRIVER: ${TRACECHECK_DATABASE_DRIVER:-postgres}
+      TRACECHECK_DATABASE_URL: ${TRACECHECK_DATABASE_URL:-postgresql://tracecheck:tracecheck@postgres:5432/tracecheck}
+      TRACECHECK_DATABASE_SSL: ${TRACECHECK_DATABASE_SSL:-false}
+      TRACECHECK_DATABASE_AUTO_MIGRATE: ${TRACECHECK_DATABASE_AUTO_MIGRATE:-true}
     ports:
       - "8787:8787"
     healthcheck:
@@ -17,7 +41,7 @@ services:
           "CMD",
           "node",
           "-e",
-          "fetch('http://127.0.0.1:8787/api/integration/status').then((response)=>process.exit(response.ok?0:1)).catch(()=>process.exit(1))",
+          "fetch('http://127.0.0.1:8787/api/health/live').then((response)=>process.exit(response.ok?0:1)).catch(()=>process.exit(1))",
         ]
       interval: 30s
       timeout: 5s
@@ -38,3 +62,6 @@ services:
     ports:
       - "4173:4173"
     restart: unless-stopped
+
+volumes:
+  tracecheck-postgres-data:

@@ -6,6 +6,10 @@ import type {
   SourceMode,
   TraceDocument,
 } from "../../../shared/types";
+import {
+  getStoredAuthSession,
+  type AuthSession,
+} from "../auth/auth-storage";
 import { createTraceDocument } from "../../../shared/trace-document";
 import {
   analyzeDocuments,
@@ -27,10 +31,48 @@ const configuredApiKey = (import.meta.env.VITE_TRACECHECK_API_KEY ?? "").trim();
 const buildApiUrl = (path: string) =>
   configuredApiBaseUrl ? `${configuredApiBaseUrl}${path}` : path;
 
-const buildApiHeaders = (headers?: HeadersInit) => {
-  const nextHeaders = new Headers(headers);
+const getApiErrorMessage = async (response: Response) => {
+  try {
+    const payload = (await response.json()) as {
+      message?: string;
+    };
+    if (payload.message) {
+      return payload.message;
+    }
+  } catch {
+    // Ignore invalid JSON payloads and fall back to the HTTP status message.
+  }
 
-  if (configuredApiToken && !nextHeaders.has("Authorization")) {
+  return `Request failed with ${response.status}.`;
+};
+
+export class ApiRequestError extends Error {
+  readonly statusCode: number;
+
+  constructor(statusCode: number, message: string) {
+    super(message);
+    this.name = "ApiRequestError";
+    this.statusCode = statusCode;
+  }
+}
+
+const buildApiHeaders = (
+  headers?: HeadersInit,
+  options?: {
+    authToken?: string;
+    includeStoredAuth?: boolean;
+  },
+) => {
+  const nextHeaders = new Headers(headers);
+  const storedSessionToken =
+    options?.includeStoredAuth === false
+      ? undefined
+      : getStoredAuthSession()?.token;
+  const authToken = options?.authToken ?? storedSessionToken;
+
+  if (authToken && !nextHeaders.has("Authorization")) {
+    nextHeaders.set("Authorization", `Bearer ${authToken}`);
+  } else if (configuredApiToken && !nextHeaders.has("Authorization")) {
     nextHeaders.set("Authorization", `Bearer ${configuredApiToken}`);
   } else if (configuredApiKey && !nextHeaders.has("X-API-Key")) {
     nextHeaders.set("X-API-Key", configuredApiKey);
@@ -108,11 +150,19 @@ export const fetchIntegrationStatus = async (): Promise<AzureIntegrationStatus> 
       headers: buildApiHeaders(),
     });
     if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        throw new ApiRequestError(response.status, await getApiErrorMessage(response));
+      }
+
       throw new Error(`Status request failed with ${response.status}`);
     }
 
     return (await response.json()) as AzureIntegrationStatus;
-  } catch {
+  } catch (error) {
+    if (error instanceof ApiRequestError) {
+      throw error;
+    }
+
     return defaultIntegrationStatus;
   }
 };
@@ -133,6 +183,10 @@ export const extractDocumentWithApi = async (
     });
 
     if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        throw new ApiRequestError(response.status, await getApiErrorMessage(response));
+      }
+
       throw new Error(`Extraction request failed with ${response.status}`);
     }
 
@@ -142,7 +196,11 @@ export const extractDocumentWithApi = async (
       ...payload,
       document: prepareDocumentForReview(payload.document),
     };
-  } catch {
+  } catch (error) {
+    if (error instanceof ApiRequestError) {
+      throw error;
+    }
+
     return {
       document: await createLocalDocument(kind, file),
       integrationStatus: defaultIntegrationStatus,
@@ -163,14 +221,107 @@ export const analyzeDocumentsWithApi = async (
     });
 
     if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        throw new ApiRequestError(response.status, await getApiErrorMessage(response));
+      }
+
       throw new Error(`Analysis request failed with ${response.status}`);
     }
 
     return (await response.json()) as AnalyzeDocumentsResponse;
-  } catch {
+  } catch (error) {
+    if (error instanceof ApiRequestError) {
+      throw error;
+    }
+
     return {
       analysis: documents.length ? analyzeDocuments(documents) : createEmptyAnalysis(),
       integrationStatus: defaultIntegrationStatus,
     };
+  }
+};
+
+export const signUpWithApi = async ({
+  email,
+  name,
+  password,
+}: {
+  email: string;
+  name: string;
+  password: string;
+}): Promise<AuthSession> => {
+  const response = await fetch(buildApiUrl("/api/auth/signup"), {
+    method: "POST",
+    headers: buildApiHeaders(
+      {
+        "Content-Type": "application/json",
+      },
+      {
+        includeStoredAuth: false,
+      },
+    ),
+    body: JSON.stringify({ email, name, password }),
+  });
+
+  if (!response.ok) {
+    throw new ApiRequestError(response.status, await getApiErrorMessage(response));
+  }
+
+  return (await response.json()) as AuthSession;
+};
+
+export const loginWithApi = async ({
+  email,
+  password,
+}: {
+  email: string;
+  password: string;
+}): Promise<AuthSession> => {
+  const response = await fetch(buildApiUrl("/api/auth/login"), {
+    method: "POST",
+    headers: buildApiHeaders(
+      {
+        "Content-Type": "application/json",
+      },
+      {
+        includeStoredAuth: false,
+      },
+    ),
+    body: JSON.stringify({ email, password }),
+  });
+
+  if (!response.ok) {
+    throw new ApiRequestError(response.status, await getApiErrorMessage(response));
+  }
+
+  return (await response.json()) as AuthSession;
+};
+
+export const fetchAuthSession = async (authToken?: string): Promise<AuthSession> => {
+  const response = await fetch(buildApiUrl("/api/auth/session"), {
+    headers: buildApiHeaders(undefined, {
+      authToken,
+      includeStoredAuth: authToken ? false : true,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new ApiRequestError(response.status, await getApiErrorMessage(response));
+  }
+
+  return (await response.json()) as AuthSession;
+};
+
+export const logoutWithApi = async (authToken?: string) => {
+  const response = await fetch(buildApiUrl("/api/auth/logout"), {
+    method: "POST",
+    headers: buildApiHeaders(undefined, {
+      authToken,
+      includeStoredAuth: authToken ? false : true,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new ApiRequestError(response.status, await getApiErrorMessage(response));
   }
 };

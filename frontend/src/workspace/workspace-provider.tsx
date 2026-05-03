@@ -7,11 +7,13 @@ import {
   useState,
 } from "react";
 import {
+  ApiRequestError,
   analyzeDocumentsWithApi,
   defaultIntegrationStatus,
   extractDocumentWithApi,
   fetchIntegrationStatus,
 } from "../api/client";
+import { useAuth } from "../auth/auth-context";
 import type {
   AzureIntegrationStatus,
   DocumentKind,
@@ -68,6 +70,7 @@ export type WorkspaceFlowContextValue = {
 const WorkspaceFlowContext = createContext<WorkspaceFlowContextValue | null>(null);
 
 export const WorkspaceFlowProvider = ({ children }: { children: ReactNode }) => {
+  const { signOut } = useAuth();
   const [documents, setDocuments] = useState<TraceDocument[]>([]);
   const [analysis, setAnalysis] = useState<TraceAnalysis>(createEmptyAnalysis());
   const [integrationStatus, setIntegrationStatus] = useState<AzureIntegrationStatus>(
@@ -76,12 +79,28 @@ export const WorkspaceFlowProvider = ({ children }: { children: ReactNode }) => 
   const [isProcessing, setIsProcessing] = useState(false);
   const [statusMessage, setStatusMessage] = useState(initialWorkspaceStatusMessage);
 
+  const handleAuthFailure = async (error: unknown) => {
+    if (
+      error instanceof ApiRequestError &&
+      (error.statusCode === 401 || error.statusCode === 403)
+    ) {
+      await signOut().catch(() => undefined);
+      return true;
+    }
+
+    return false;
+  };
+
   useEffect(() => {
-    void fetchIntegrationStatus().then((status) => {
-      startTransition(() => {
-        setIntegrationStatus(status);
+    void fetchIntegrationStatus()
+      .then((status) => {
+        startTransition(() => {
+          setIntegrationStatus(status);
+        });
+      })
+      .catch((error) => {
+        void handleAuthFailure(error);
       });
-    });
   }, []);
 
   const syncLocalAnalysis = (
@@ -98,12 +117,17 @@ export const WorkspaceFlowProvider = ({ children }: { children: ReactNode }) => 
 
   const refreshAnalysis = async (nextDocuments: TraceDocument[]) => {
     setIsProcessing(true);
-    const result = await analyzeDocumentsWithApi(nextDocuments);
-    startTransition(() => {
-      setAnalysis(result.analysis);
-      setIntegrationStatus(result.integrationStatus);
-    });
-    setIsProcessing(false);
+    try {
+      const result = await analyzeDocumentsWithApi(nextDocuments);
+      startTransition(() => {
+        setAnalysis(result.analysis);
+        setIntegrationStatus(result.integrationStatus);
+      });
+    } catch (error) {
+      await handleAuthFailure(error);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const resetWorkspace = () => {
@@ -118,21 +142,26 @@ export const WorkspaceFlowProvider = ({ children }: { children: ReactNode }) => 
     }
 
     setIsProcessing(true);
-    const result = await extractDocumentWithApi(kind, file);
-    const nextDocuments = sortDocumentsByKind([
-      ...documents.filter((document) => document.kind !== kind),
-      result.document,
-    ]);
+    try {
+      const result = await extractDocumentWithApi(kind, file);
+      const nextDocuments = sortDocumentsByKind([
+        ...documents.filter((document) => document.kind !== kind),
+        result.document,
+      ]);
 
-    syncLocalAnalysis(
-      nextDocuments,
-      `${result.document.label} updated via ${result.document.serviceLabel ?? "TraceCheck API"}. Review the extracted fields below before approval.`,
-    );
-    startTransition(() => {
-      setIntegrationStatus(result.integrationStatus);
-    });
-    setIsProcessing(false);
-    void refreshAnalysis(nextDocuments);
+      syncLocalAnalysis(
+        nextDocuments,
+        `${result.document.label} updated via ${result.document.serviceLabel ?? "TraceCheck API"}. Review the extracted fields below before approval.`,
+      );
+      startTransition(() => {
+        setIntegrationStatus(result.integrationStatus);
+      });
+      void refreshAnalysis(nextDocuments);
+    } catch (error) {
+      await handleAuthFailure(error);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const updateReviewedField = (

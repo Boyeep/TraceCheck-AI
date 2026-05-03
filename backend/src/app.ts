@@ -3,6 +3,7 @@ import { performance } from "node:perf_hooks";
 import express from "express";
 import multer from "multer";
 import type { ErrorRequestHandler } from "express";
+import { registerAuthRoutes } from "./routes/auth-routes";
 import { registerAnalysisRoutes } from "./routes/analysis-routes";
 import { registerDocumentRoutes } from "./routes/document-routes";
 import { registerHealthRoutes } from "./routes/health-routes";
@@ -85,6 +86,7 @@ export const createApp = () => {
   });
   app.use(express.json({ limit: "1mb" }));
 
+  registerAuthRoutes(app);
   registerHealthRoutes(app);
   registerIntegrationRoutes(app);
   registerDocumentRoutes(app);

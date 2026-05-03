@@ -18,7 +18,8 @@ export type ConfigDiagnostic = {
   message: string;
 };
 
-export type AuthMode = "disabled" | "api-key";
+export type AuthMode = "disabled" | "api-key" | "session";
+export type DatabaseDriver = "postgres" | "pg-mem";
 
 export type AuthTokenConfig = {
   actorId: string;
@@ -28,6 +29,7 @@ export type AuthTokenConfig = {
 };
 
 export type RateLimitBucketName =
+  | "auth"
   | "status"
   | "analysis"
   | "upload"
@@ -44,6 +46,10 @@ export type RuntimeConfig = {
   nodeEnv: string;
   authMode: AuthMode;
   authTokens: AuthTokenConfig[];
+  databaseDriver: DatabaseDriver;
+  databaseUrl?: string;
+  databaseSsl: boolean;
+  databaseAutoMigrate: boolean;
   freezeWriteOperations: boolean;
   strictStartupChecks: boolean;
   monitoringWebhookUrl?: string;
@@ -101,6 +107,12 @@ const defaultAllowedUploadExtensions = [
 ];
 
 const unique = <T>(values: T[]) => [...new Set(values)];
+const actorRoles = [
+  "qa-operator",
+  "qa-supervisor",
+  "ops-admin",
+  "auditor",
+] as const;
 
 const parseBoolean = (value: string | undefined, fallback: boolean) =>
   value === undefined ? fallback : value.trim().toLowerCase() === "true";
@@ -126,14 +138,40 @@ const parseList = (value: string | undefined, fallback: string[]) =>
     : fallback;
 
 const normalizeAuthMode = (value: string | undefined): AuthMode =>
-  value?.trim().toLowerCase() === "api-key" ? "api-key" : "disabled";
+  value?.trim().toLowerCase() === "api-key"
+    ? "api-key"
+    : value?.trim().toLowerCase() === "session"
+      ? "session"
+      : "disabled";
+
+const normalizeDatabaseDriver = ({
+  explicitValue,
+  nodeEnv,
+  databaseUrl,
+}: {
+  explicitValue: string | undefined;
+  nodeEnv: string;
+  databaseUrl?: string;
+}): DatabaseDriver =>
+  explicitValue?.trim().toLowerCase() === "pg-mem"
+    ? "pg-mem"
+    : explicitValue?.trim().toLowerCase() === "postgres"
+      ? "postgres"
+      : databaseUrl
+        ? "postgres"
+        : nodeEnv === "production"
+          ? "postgres"
+          : "pg-mem";
+
+export const isActorRole = (value: string): value is ActorRole =>
+  (actorRoles as readonly string[]).includes(value);
 
 const parseRoles = (value: string) =>
   unique(
     value
       .split("|")
       .map((entry) => entry.trim())
-      .filter((entry): entry is ActorRole => entry in rolePermissionMap),
+      .filter((entry): entry is ActorRole => isActorRole(entry)),
   );
 
 const parseAuthTokens = (rawValue: string | undefined): AuthTokenConfig[] =>
@@ -177,6 +215,11 @@ export const getAllPermissions = (): Permission[] =>
   unique(Object.values(rolePermissionMap).flat());
 
 export const getRuntimeConfig = (): RuntimeConfig => {
+  const nodeEnv = process.env.NODE_ENV?.trim() || "development";
+  const databaseUrl =
+    process.env.TRACECHECK_DATABASE_URL?.trim() ||
+    process.env.DATABASE_URL?.trim() ||
+    undefined;
   const maxUploadFileSizeMb = parsePositiveInteger(
     process.env.TRACECHECK_MAX_FILE_SIZE_MB,
     10,
@@ -188,9 +231,20 @@ export const getRuntimeConfig = (): RuntimeConfig => {
 
   return {
     serviceName: process.env.TRACECHECK_SERVICE_NAME?.trim() || "tracecheck-backend",
-    nodeEnv: process.env.NODE_ENV?.trim() || "development",
+    nodeEnv,
     authMode: normalizeAuthMode(process.env.TRACECHECK_AUTH_MODE),
     authTokens: parseAuthTokens(process.env.TRACECHECK_API_TOKENS),
+    databaseDriver: normalizeDatabaseDriver({
+      explicitValue: process.env.TRACECHECK_DATABASE_DRIVER,
+      nodeEnv,
+      databaseUrl,
+    }),
+    databaseUrl,
+    databaseSsl: parseBoolean(process.env.TRACECHECK_DATABASE_SSL, false),
+    databaseAutoMigrate: parseBoolean(
+      process.env.TRACECHECK_DATABASE_AUTO_MIGRATE,
+      true,
+    ),
     freezeWriteOperations: parseBoolean(
       process.env.TRACECHECK_FREEZE_WRITE_OPERATIONS,
       false,
@@ -218,6 +272,13 @@ export const getRuntimeConfig = (): RuntimeConfig => {
       defaultAllowedUploadExtensions,
     ),
     rateLimits: {
+      auth: {
+        maxRequests: parsePositiveInteger(
+          process.env.TRACECHECK_RATE_LIMIT_AUTH_MAX_REQUESTS,
+          20,
+        ),
+        windowMs,
+      },
       status: {
         maxRequests: parsePositiveInteger(
           process.env.TRACECHECK_RATE_LIMIT_STATUS_MAX_REQUESTS,
@@ -284,6 +345,31 @@ export const validateRuntimeConfig = (
   }
 
   if (
+    config.authMode === "session" &&
+    config.databaseDriver === "postgres" &&
+    !config.databaseUrl
+  ) {
+    diagnostics.push({
+      code: "database.url_missing",
+      severity: "error",
+      message:
+        "Session auth requires TRACECHECK_DATABASE_URL (or DATABASE_URL) when TRACECHECK_DATABASE_DRIVER=postgres.",
+    });
+  }
+
+  if (
+    config.authMode === "session" &&
+    config.databaseDriver === "pg-mem"
+  ) {
+    diagnostics.push({
+      code: "database.pg_mem_ephemeral",
+      severity: config.nodeEnv === "production" ? "error" : "warning",
+      message:
+        "Session auth is using the pg-mem in-memory database. Accounts and sessions will be lost on restart.",
+    });
+  }
+
+  if (
     config.nodeEnv === "production" &&
     config.authMode === "disabled"
   ) {
@@ -291,7 +377,7 @@ export const validateRuntimeConfig = (
       code: "auth.disabled_in_production",
       severity: "warning",
       message:
-        "Authentication is disabled while NODE_ENV=production. Enable TRACECHECK_AUTH_MODE=api-key before a real deployment.",
+        "Authentication is disabled while NODE_ENV=production. Enable TRACECHECK_AUTH_MODE=session or api-key before a real deployment.",
     });
   }
 

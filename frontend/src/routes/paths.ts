@@ -1,6 +1,8 @@
 export const routePaths = {
   home: "/",
   features: "/features",
+  login: "/login",
+  signup: "/signup",
   workspace: "/workspace",
 } as const;
 

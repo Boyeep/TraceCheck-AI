@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { createApp } from "./app";
+import { bootstrapDatabase } from "./services/database-service";
 import { buildIntegrationStatus } from "./services/integration-status-service";
 import {
   getRuntimeConfig,
@@ -7,18 +8,26 @@ import {
 } from "./services/runtime-config-service";
 
 const port = Number(process.env.PORT ?? "8787");
+const runtimeConfig = getRuntimeConfig();
 const app = createApp();
 
+if (
+  runtimeConfig.authMode === "session" ||
+  Boolean(runtimeConfig.databaseUrl) ||
+  Boolean(process.env.TRACECHECK_DATABASE_DRIVER?.trim())
+) {
+  await bootstrapDatabase();
+}
+
 app.listen(port, () => {
-  const config = getRuntimeConfig();
-  const diagnostics = validateRuntimeConfig(config);
+  const diagnostics = validateRuntimeConfig(runtimeConfig);
   const status = buildIntegrationStatus();
   const modeLine =
     status.readiness.binaryOcr === "azure"
       ? `Azure Document Intelligence ready with model ${status.modelId}.`
       : "Fallback mode active. Configure Azure credentials to enable live OCR.";
 
-  console.log(`${config.serviceName} listening on http://127.0.0.1:${port}`);
+  console.log(`${runtimeConfig.serviceName} listening on http://127.0.0.1:${port}`);
   console.log(modeLine);
   diagnostics.forEach((diagnostic) => {
     const line = `[tracecheck.config.${diagnostic.severity}] ${diagnostic.message}`;
@@ -30,7 +39,7 @@ app.listen(port, () => {
   });
 
   if (
-    config.strictStartupChecks &&
+    runtimeConfig.strictStartupChecks &&
     diagnostics.some((diagnostic) => diagnostic.severity === "error")
   ) {
     throw new Error(

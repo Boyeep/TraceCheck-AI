@@ -16,18 +16,14 @@ export default defineConfig({
     {
       command: "npm run start:backend",
       port: backendPort,
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: false,
       timeout: 30_000,
     },
     {
       command: "npm run dev:frontend:ci",
       port: frontendPort,
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: false,
       timeout: 30_000,
-      env: {
-        ...process.env,
-        VITE_TRACECHECK_API_BASE_URL: `http://127.0.0.1:${backendPort}`,
-      },
     },
   ],
 });
