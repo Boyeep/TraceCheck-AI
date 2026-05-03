@@ -4,7 +4,7 @@ import { buildIntegrationStatus } from "../lib/integration";
 import {
   analyzeDocuments,
   createEmptyAnalysis,
-} from "../../../../shared/tracecheck";
+} from "../../../../shared/tracecheck/analyze";
 import type {
   AnalyzeDocumentsResponse,
   TraceDocument,

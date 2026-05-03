@@ -1,10 +1,15 @@
+import { createRequire } from "node:module";
 import type {
   AzureIntegrationStatus,
   IntegrationMode,
 } from "../../../shared/types";
-import { getDocumentIntelligenceConfig } from "../../../shared/server/azure-document-intelligence";
-import { buildAzureIntegrationStatus } from "../../../shared/server/integration-status";
-import { getModelLayerStatus } from "../model-layer";
+import { getModelLayerStatus } from "../model-layer/status";
+
+const require = createRequire(import.meta.url);
+const { getDocumentIntelligenceConfig } = require("../../../shared/server/azure-document-intelligence") as
+  typeof import("../../../shared/server/azure-document-intelligence");
+const { buildAzureIntegrationStatus } = require("../../../shared/server/integration-status") as
+  typeof import("../../../shared/server/integration-status");
 
 type BuildIntegrationStatusOptions = {
   mode?: IntegrationMode;

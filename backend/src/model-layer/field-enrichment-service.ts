@@ -1,16 +1,20 @@
+import { createRequire } from "node:module";
 import type {
   DocumentKind,
   ExtractedFields,
 } from "../../../shared/types";
-import {
-  extractFields,
-  normalizeFieldValue,
-  traceFieldKeys,
-} from "../../../shared/tracecheck";
 import { callAzureOpenAiJson } from "./azure-openai-client";
 import { truncateText } from "./config";
 import { getModelLayerStatus } from "./status";
 import { isRecord } from "./utils";
+
+const require = createRequire(import.meta.url);
+const { traceFieldKeys } = require("../../../shared/tracecheck/constants") as
+  typeof import("../../../shared/tracecheck/constants");
+const { extractFields } = require("../../../shared/tracecheck/extract") as
+  typeof import("../../../shared/tracecheck/extract");
+const { normalizeFieldValue } = require("../../../shared/tracecheck/normalize") as
+  typeof import("../../../shared/tracecheck/normalize");
 
 const coerceExtractedFields = (payload: unknown): ExtractedFields => {
   const source =

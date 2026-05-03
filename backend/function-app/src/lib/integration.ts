@@ -4,7 +4,7 @@ import type {
   SourceMode,
   TraceDocument,
 } from "../../../../shared/types";
-import { extractFields } from "../../../../shared/tracecheck";
+import { extractFields } from "../../../../shared/tracecheck/extract";
 import { createTraceDocument } from "../../../../shared/trace-document";
 import {
   buildBinaryUploadResponse,

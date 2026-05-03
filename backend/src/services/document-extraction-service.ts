@@ -1,18 +1,22 @@
+import { createRequire } from "node:module";
 import type {
   DocumentKind,
   ExtractDocumentResponse,
   SourceMode,
   TraceDocument,
 } from "../../../shared/types";
-import { createTraceDocument } from "../../../shared/trace-document";
-import { isTextLikeUpload } from "../../../shared/uploads";
-import {
-  buildBinaryUploadResponse,
-  buildTextUploadResponse,
-} from "../../../shared/server/document-upload";
-import { enrichExtractedFields } from "../model-layer";
+import { enrichExtractedFields } from "../model-layer/field-enrichment-service";
 import { buildIntegrationStatus } from "./integration-status-service";
 import type { Express } from "express";
+
+const require = createRequire(import.meta.url);
+const { createTraceDocument } = require("../../../shared/trace-document") as
+  typeof import("../../../shared/trace-document");
+const { isTextLikeUpload } = require("../../../shared/uploads") as
+  typeof import("../../../shared/uploads");
+const { buildBinaryUploadResponse, buildTextUploadResponse } =
+  require("../../../shared/server/document-upload") as
+    typeof import("../../../shared/server/document-upload");
 
 const buildDocument = async ({
   kind,
