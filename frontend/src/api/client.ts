@@ -21,9 +21,23 @@ import {
 const configuredApiBaseUrl = (import.meta.env.VITE_TRACECHECK_API_BASE_URL ?? "")
   .trim()
   .replace(/\/+$/, "");
+const configuredApiToken = (import.meta.env.VITE_TRACECHECK_API_TOKEN ?? "").trim();
+const configuredApiKey = (import.meta.env.VITE_TRACECHECK_API_KEY ?? "").trim();
 
 const buildApiUrl = (path: string) =>
   configuredApiBaseUrl ? `${configuredApiBaseUrl}${path}` : path;
+
+const buildApiHeaders = (headers?: HeadersInit) => {
+  const nextHeaders = new Headers(headers);
+
+  if (configuredApiToken && !nextHeaders.has("Authorization")) {
+    nextHeaders.set("Authorization", `Bearer ${configuredApiToken}`);
+  } else if (configuredApiKey && !nextHeaders.has("X-API-Key")) {
+    nextHeaders.set("X-API-Key", configuredApiKey);
+  }
+
+  return nextHeaders;
+};
 
 const unreachableApiLabel = configuredApiBaseUrl
   ? `The configured TraceCheck API at ${configuredApiBaseUrl} could not be reached, so the frontend is using the local fallback path.`
@@ -90,7 +104,9 @@ const createLocalDocument = async (
 
 export const fetchIntegrationStatus = async (): Promise<AzureIntegrationStatus> => {
   try {
-    const response = await fetch(buildApiUrl("/api/integration/status"));
+    const response = await fetch(buildApiUrl("/api/integration/status"), {
+      headers: buildApiHeaders(),
+    });
     if (!response.ok) {
       throw new Error(`Status request failed with ${response.status}`);
     }
@@ -111,6 +127,7 @@ export const extractDocumentWithApi = async (
     formData.append("file", file);
 
     const response = await fetch(buildApiUrl("/api/documents/extract"), {
+      headers: buildApiHeaders(),
       method: "POST",
       body: formData,
     });
@@ -139,9 +156,9 @@ export const analyzeDocumentsWithApi = async (
   try {
     const response = await fetch(buildApiUrl("/api/analysis"), {
       method: "POST",
-      headers: {
+      headers: buildApiHeaders({
         "Content-Type": "application/json",
-      },
+      }),
       body: JSON.stringify({ documents }),
     });
 

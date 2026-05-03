@@ -170,7 +170,7 @@ export const featureSpotlights: FeatureSpotlight[] = [
           "TraceCheck is designed to stay usable even when the live API path is unavailable.",
         bullets: [
           "Frontend fallback keeps the demo flow working when the API cannot be reached.",
-          "The Express API exposes extraction, analysis, and integration-status routes.",
+          "The Express API exposes extraction, analysis, integration-status, and health routes.",
           "The Function App mirrors the same route shape for Azure deployment.",
         ],
       },
@@ -181,7 +181,7 @@ export const featureSpotlights: FeatureSpotlight[] = [
         bullets: [
           "Image and PDF uploads can flow through Azure OCR when credentials are configured.",
           "The frontend can point to local Express, local Functions, or deployed Functions.",
-          "The product shell and validation logic stay consistent across those modes.",
+          "Auth, rate limits, audit logging, and readiness checks stay aligned across those modes.",
         ],
       },
     ],
@@ -197,9 +197,9 @@ export const featureSpotlights: FeatureSpotlight[] = [
       {
         title: "API Layer",
         items: [
-          "Secure document extraction endpoints",
-          "Analysis endpoint for recommendation payloads",
-          "Fallback behavior when Azure is unavailable",
+          "Token-ready auth and permission scaffolding",
+          "Rate limiting, health checks, and ops endpoints",
+          "Fallback behavior plus audit and alert hooks",
         ],
       },
       {

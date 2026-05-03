@@ -16,20 +16,80 @@ const oversizedUploadBytes = 10 * 1024 * 1024 + 1;
 const toJsonComparable = <T>(value: T): T =>
   JSON.parse(JSON.stringify(value)) as T;
 
+const withTemporaryEnv = async (
+  entries: Record<string, string | undefined>,
+  callback: () => Promise<void>,
+) => {
+  const previous = new Map<string, string | undefined>();
+  Object.entries(entries).forEach(([key, value]) => {
+    previous.set(key, process.env[key]);
+    if (value === undefined) {
+      delete process.env[key];
+      return;
+    }
+
+    process.env[key] = value;
+  });
+
+  try {
+    await callback();
+  } finally {
+    previous.forEach((value, key) => {
+      if (value === undefined) {
+        delete process.env[key];
+        return;
+      }
+
+      process.env[key] = value;
+    });
+  }
+};
+
 const assertCommonHeaders = (response: Response) => {
   assert.equal(response.headers.get("cache-control"), "no-store");
   assert.match(response.headers.get("x-request-id") ?? "", requestIdPattern);
 };
 
-const app = createApp();
-const server = app.listen(0, "127.0.0.1");
+await withTemporaryEnv(
+  {
+    TRACECHECK_AUTH_MODE: "disabled",
+    TRACECHECK_FREEZE_WRITE_OPERATIONS: "false",
+  },
+  async () => {
+    const app = createApp();
+    const server = app.listen(0, "127.0.0.1");
 
-await once(server, "listening");
+    await once(server, "listening");
 
-const { port } = server.address() as AddressInfo;
-const baseUrl = `http://127.0.0.1:${port}`;
+    const { port } = server.address() as AddressInfo;
+    const baseUrl = `http://127.0.0.1:${port}`;
 
-try {
+    try {
+  const livenessResponse = await fetch(`${baseUrl}/api/health/live`);
+  assert.equal(livenessResponse.status, 200);
+  assertCommonHeaders(livenessResponse);
+
+  const livenessPayload = (await livenessResponse.json()) as {
+    service: string;
+    status: string;
+  };
+  assert.equal(livenessPayload.status, "live");
+
+  const readinessResponse = await fetch(`${baseUrl}/api/health/ready`);
+  assert.equal(readinessResponse.status, 200);
+  assertCommonHeaders(readinessResponse);
+
+  const readinessPayload = (await readinessResponse.json()) as {
+    checks: {
+      configuration: {
+        ok: boolean;
+      };
+    };
+    status: string;
+  };
+  assert.equal(readinessPayload.status, "ready");
+  assert.equal(readinessPayload.checks.configuration.ok, true);
+
   const integrationStatusResponse = await fetch(`${baseUrl}/api/integration/status`);
   assert.equal(integrationStatusResponse.status, 200);
   assertCommonHeaders(integrationStatusResponse);
@@ -121,17 +181,19 @@ try {
     oversizedUploadPayload.integrationStatus.reason,
     "Uploaded file exceeds the 10 MB limit.",
   );
-} finally {
-  await new Promise<void>((resolve, reject) => {
-    server.close((error) => {
-      if (error) {
-        reject(error);
-        return;
-      }
+    } finally {
+      await new Promise<void>((resolve, reject) => {
+        server.close((error) => {
+          if (error) {
+            reject(error);
+            return;
+          }
 
-      resolve();
-    });
-  });
-}
+          resolve();
+        });
+      });
+    }
+  },
+);
 
-console.log("api route smoke tests passed (4 cases)");
+console.log("api route smoke tests passed (6 cases)");

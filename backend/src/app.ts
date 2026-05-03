@@ -1,13 +1,20 @@
 import crypto from "node:crypto";
+import { performance } from "node:perf_hooks";
 import express from "express";
 import multer from "multer";
 import type { ErrorRequestHandler } from "express";
 import { registerAnalysisRoutes } from "./routes/analysis-routes";
 import { registerDocumentRoutes } from "./routes/document-routes";
+import { registerHealthRoutes } from "./routes/health-routes";
 import { registerIntegrationRoutes } from "./routes/integration-routes";
+import { registerOpsRoutes } from "./routes/ops-routes";
 import { ApiError } from "./services/api-error";
 import { buildIntegrationStatus } from "./services/integration-status-service";
-import { logRequestFailure } from "./services/observability-service";
+import {
+  logRequestFailure,
+  recordRequestMetric,
+} from "./services/observability-service";
+import { setResponseRequestId } from "./services/security-service";
 
 const invalidJsonBodyMessage = "Request body is not valid JSON.";
 const oversizedUploadMessage = "Uploaded file exceeds the 10 MB limit.";
@@ -24,6 +31,7 @@ const mapErrorToResponse = (error: unknown) => {
     return {
       statusCode: error.statusCode,
       message: error.message,
+      headers: error.headers,
     };
   }
 
@@ -34,6 +42,7 @@ const mapErrorToResponse = (error: unknown) => {
         error.code === "LIMIT_FILE_SIZE"
           ? oversizedUploadMessage
           : "Upload request could not be processed.",
+      headers: undefined,
     };
   }
 
@@ -41,12 +50,14 @@ const mapErrorToResponse = (error: unknown) => {
     return {
       statusCode: 400,
       message: invalidJsonBodyMessage,
+      headers: undefined,
     };
   }
 
   return {
     statusCode: 500,
     message: unexpectedServerErrorMessage,
+    headers: undefined,
   };
 };
 
@@ -55,15 +66,30 @@ export const createApp = () => {
 
   app.use((_request, response, next) => {
     const requestId = crypto.randomUUID();
+    setResponseRequestId(response, requestId);
     response.setHeader("X-Request-Id", requestId);
     response.setHeader("Cache-Control", "no-store");
     next();
   });
+  app.use((request, response, next) => {
+    const startedAt = performance.now();
+    response.on("finish", () => {
+      recordRequestMetric({
+        method: request.method,
+        path: request.path,
+        statusCode: response.statusCode,
+        durationMs: Number((performance.now() - startedAt).toFixed(2)),
+      });
+    });
+    next();
+  });
   app.use(express.json({ limit: "1mb" }));
 
+  registerHealthRoutes(app);
   registerIntegrationRoutes(app);
   registerDocumentRoutes(app);
   registerAnalysisRoutes(app);
+  registerOpsRoutes(app);
 
   const errorHandler: ErrorRequestHandler = (error, request, response, next) => {
     if (response.headersSent) {
@@ -71,7 +97,7 @@ export const createApp = () => {
       return;
     }
 
-    const { statusCode, message } = mapErrorToResponse(error);
+    const { statusCode, message, headers } = mapErrorToResponse(error);
     const requestId = String(response.getHeader("X-Request-Id") ?? "unknown");
     logRequestFailure({
       requestId,
@@ -82,8 +108,15 @@ export const createApp = () => {
       error,
     });
 
+    if (headers) {
+      Object.entries(headers).forEach(([key, value]) => {
+        response.setHeader(key, value);
+      });
+    }
+
     response.status(statusCode).json({
       message,
+      requestId,
       integrationStatus: buildIntegrationStatus({
         mode: "fallback",
         reason: message,

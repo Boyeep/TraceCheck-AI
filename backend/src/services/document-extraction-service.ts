@@ -8,6 +8,7 @@ import type {
 import { enrichExtractedFields } from "../model-layer/field-enrichment-service";
 import { buildIntegrationStatus } from "./integration-status-service";
 import type { Express } from "express";
+import { sanitizeUploadFileName } from "./upload-service";
 
 const require = createRequire(import.meta.url);
 const { createTraceDocument } = require("../../../shared/trace-document") as
@@ -70,7 +71,7 @@ export const extractDocumentFromUpload = async (
   if (sourceMode === "uploaded-text") {
     return buildTextUploadResponse({
       kind,
-      fileName: file.originalname,
+      fileName: sanitizeUploadFileName(file.originalname),
       contentType: file.mimetype,
       rawText: file.buffer.toString("utf-8"),
       note: "Extracted from a text-based upload via the TraceCheck API.",
@@ -83,7 +84,7 @@ export const extractDocumentFromUpload = async (
 
   return buildBinaryUploadResponse({
     kind,
-    fileName: file.originalname,
+    fileName: sanitizeUploadFileName(file.originalname),
     contentType: file.mimetype,
     bytes: file.buffer,
     fallbackOcrModeLabel: "Local fallback",

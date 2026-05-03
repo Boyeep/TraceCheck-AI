@@ -19,6 +19,15 @@ TraceCheck AI is a hackathon prototype for pharma incoming-material verification
 - Risk scoring and `release / manual review / hold` recommendation
 - Exportable verification report
 
+## Production-readiness scaffold
+
+- Token-based auth and permission scaffolding for API and ops routes
+- In-memory rate limiting for upload, analysis, status, health, and ops endpoints
+- Health, readiness, metrics, and audit endpoints in the Express API
+- Structured alert webhook and audit-log sinks for production wiring
+- Playwright E2E smoke coverage plus backend route smoke tests
+- A local perf smoke script and a GitHub Actions CI workflow
+
 ## Azure integration layer
 
 - `GET /api/integration/status` reports whether Azure Document Intelligence is configured
@@ -78,6 +87,24 @@ Build every app:
 npm run build
 ```
 
+Run backend unit and route tests:
+
+```bash
+npm run test:backend
+```
+
+Run frontend E2E smoke tests:
+
+```bash
+npm run test:e2e
+```
+
+Run the local perf smoke script against a running backend:
+
+```bash
+npm run test:perf
+```
+
 Preview the frontend bundle:
 
 ```bash
@@ -111,6 +138,8 @@ Copy `frontend/.env.example` to `frontend/.env` when you want to override the de
 ```bash
 TRACECHECK_DEV_API_TARGET=http://127.0.0.1:8787
 VITE_TRACECHECK_API_BASE_URL=
+VITE_TRACECHECK_API_TOKEN=
+VITE_TRACECHECK_API_KEY=
 ```
 
 Without these values, the app still works in fallback mode and the API status endpoint will report that Azure is not configured.
@@ -161,6 +190,15 @@ Useful commands:
 4. Confirm the validation matrix and flagged discrepancies.
 5. Approve reviewed documents and export the verification report.
 6. Use the Azure status card to explain the deployment path.
+
+## Ops endpoints
+
+- `GET /api/health/live` for liveness
+- `GET /api/health/ready` for readiness and config diagnostics
+- `GET /api/ops/metrics` for in-memory counters and timer summaries
+- `GET /api/ops/audit/recent` for recent audit events
+
+When auth is enabled, use either `Authorization: Bearer <token>` or `X-API-Key: <token>`.
 
 ## Suggested Azure architecture
 

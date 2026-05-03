@@ -6,3 +6,6 @@ dist
 .env
 docker-compose.override.yml
 docs/
+playwright-report/
+test-results/
+var/

@@ -1,4 +1,9 @@
-import "./integration-status.test";
-import "./api-routes.test";
+const run = async () => {
+  await import("./integration-status.test");
+  await import("./api-routes.test");
+  await import("./security-controls.test");
+};
+
+await run();
 
 export {};
